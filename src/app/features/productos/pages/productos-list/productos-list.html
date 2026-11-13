@@ -1,0 +1,171 @@
+<main class="mx-auto max-w-[1150px] px-[1.1rem] pb-8 pt-8 sm:px-11 sm:pt-12">
+  <header class="mb-8 flex items-center justify-between gap-4">
+    <div>
+      <p
+        class="mb-2 flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-secondary"
+      >
+        <span class="size-[7px] rounded-full bg-secondary" aria-hidden="true"></span> Inventario
+      </p>
+      <h1 class="text-3xl font-medium tracking-tight sm:text-[2.35rem]">Productos</h1>
+      <p class="mt-2 text-sm text-base-content/60">
+        Organiza y consulta los productos de tu catálogo.
+      </p>
+    </div>
+    <span
+      class="hidden size-[52px] shrink-0 place-items-center rounded-[17px] border border-primary/20 bg-primary/10 text-secondary sm:grid"
+      ><svg lucideBox [size]="24" aria-hidden="true"></svg
+    ></span>
+  </header>
+  <section
+    class="overflow-hidden rounded-[20px] border border-base-content/10 bg-base-200 shadow-[0_14px_35px_rgba(0,0,0,0.05)]"
+    aria-labelledby="productos-title"
+  >
+    <div
+      class="flex flex-col gap-4 border-b border-base-content/10 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-6"
+    >
+      <div class="flex items-center gap-3">
+        <span
+          class="grid size-[42px] shrink-0 place-items-center rounded-[13px] bg-primary/10 text-secondary"
+          ><svg lucideBox [size]="19" aria-hidden="true"></svg
+        ></span>
+        <div>
+          <h2 id="productos-title" class="text-[1.05rem] font-medium">Catálogo de productos</h2>
+          <p class="mt-1 text-xs text-base-content/60 sm:text-sm">
+            Consulta precios y existencias en un solo lugar.
+          </p>
+        </div>
+      </div>
+      @if (access.puede(permisos.PRODUCTOS.CREAR)) {
+        @if (
+          access.puede(permisos.MARCAS.LEER) &&
+          access.puede(permisos.CATEGORIAS.LEER) &&
+          access.puede(permisos.UNIDADES_MEDIDA.LEER)
+        ) {
+          <a
+            class="btn btn-primary min-h-0 h-auto rounded-[10px] px-4 py-3 text-xs font-medium"
+            routerLink="/admin/productos/nuevo"
+            ><svg lucidePlus [size]="17" aria-hidden="true"></svg> Nuevo producto</a
+          >
+        } @else {
+          <p class="max-w-xs text-sm text-base-content/60">
+            Para crear productos necesitas acceso de lectura a marcas, categorías y unidades de
+            medida.
+          </p>
+        }
+      }
+    </div>
+    <div
+      class="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8"
+    >
+      <p class="text-[0.83rem] font-medium">
+        Listado de productos
+        @if (productos.data(); as result) {
+          <span
+            class="ml-1 inline-grid min-w-[23px] place-items-center rounded-[7px] bg-primary/15 px-1.5 py-1 text-[0.7rem] text-secondary"
+            >{{ result.total }}</span
+          >
+        }
+      </p>
+      <label
+        class="flex items-center gap-2 rounded-[10px] border border-base-content/10 bg-base-300 px-3 py-2.5 text-base-content/60 focus-within:outline-2 focus-within:outline-secondary sm:w-[230px]"
+        ><svg lucideSearch [size]="16" aria-hidden="true"></svg
+        ><span class="sr-only">Buscar productos</span
+        ><input
+          class="w-full min-w-0 bg-transparent text-xs text-base-content outline-none"
+          type="search"
+          maxlength="150"
+          placeholder="Buscar por nombre..."
+          (input)="buscar($event)"
+      /></label>
+    </div>
+    @if (productos.isPending()) {
+      <p class="p-12 text-center text-sm text-base-content/60" role="status">
+        Cargando productos...
+      </p>
+    } @else if (productos.isError()) {
+      <div class="p-12 text-center" role="alert">
+        <h3 class="font-medium">No se pudo cargar el listado</h3>
+        <p class="mt-2 text-sm text-base-content/60">{{ listError() }}</p>
+        <button
+          class="mt-4 text-sm font-medium text-secondary"
+          type="button"
+          (click)="productos.refetch()"
+        >
+          Reintentar
+        </button>
+      </div>
+    } @else if (productos.data(); as result) {
+      <app-data-table label="Listado de productos, desplazar horizontalmente"
+        ><table class="w-full min-w-[700px] border-collapse text-left">
+          <thead
+            class="bg-base-content/[0.04] text-[0.67rem] font-medium uppercase tracking-wider text-base-content/50"
+          >
+            <tr>
+              <th scope="col" class="px-8 py-3 font-medium">Producto</th>
+              <th scope="col" class="px-4 py-3 font-medium">Marca</th>
+              <th scope="col" class="px-4 py-3 font-medium">SKU</th>
+              <th scope="col" class="px-4 py-3 font-medium">Precio</th>
+              <th scope="col" class="px-8 py-3 font-medium">Stock</th><th scope="col" class="px-8 py-3"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (producto of result.items; track producto.id) {
+              <tr class="border-b border-base-content/[0.07] text-sm hover:bg-base-content/[0.03]">
+                <td class="px-8 py-4">
+                  <div class="flex items-center gap-3">
+                    @if (producto.imagen) {
+                      <img
+                        class="size-[38px] shrink-0 rounded-xl object-cover"
+                        [src]="producto.imagen"
+                        alt=""
+                      />
+                    } @else {
+                      <span
+                        class="grid size-[38px] shrink-0 place-items-center rounded-xl bg-primary/15 text-secondary"
+                        ><svg lucideBox [size]="17" aria-hidden="true"></svg
+                      ></span>
+                    }
+                    <strong class="font-medium">{{ producto.nombre }}</strong>
+                  </div>
+                </td>
+                <td class="px-4 py-4 text-base-content/70">{{ producto.marca }}</td>
+                <td class="px-4 py-4 text-base-content/70">{{ producto.sku || '—' }}</td>
+                <td class="px-4 py-4">S/ {{ producto.precio | numeroDecimal }}</td>
+                <td class="px-8 py-4 whitespace-nowrap">
+                  {{ producto.stock | numeroDecimal }} {{ producto.unidad }}
+                </td>
+                <td class="px-8 py-4 text-right">@if (access.puede(permisos.PRODUCTOS.EDITAR)) { <a class="btn btn-ghost btn-sm rounded-lg bg-base-300 text-xs font-normal" [routerLink]="['/admin/productos', producto.id, 'editar']" [attr.aria-label]="'Editar ' + producto.nombre">Editar</a> }</td>
+              </tr>
+            }
+          </tbody>
+        </table></app-data-table
+      >
+      @if (!result.items.length) {
+        <div class="flex flex-col items-center px-4 py-14 text-center">
+          <span
+            class="mb-4 grid size-[54px] place-items-center rounded-[17px] bg-primary/10 text-secondary"
+            ><svg lucideBox [size]="24" aria-hidden="true"></svg
+          ></span>
+          @if (nombre()) {
+            <h3 class="text-[0.95rem] font-medium">No encontramos productos</h3>
+            <p class="mt-2 text-sm text-base-content/50">Prueba con otro nombre.</p>
+          } @else {
+            <h3 class="text-[0.95rem] font-medium">Tu catálogo empieza aquí</h3>
+            <p class="mt-2 text-sm text-base-content/50">Aún no hay productos registrados.</p>
+          }
+        </div>
+      }
+      <div class="border-t border-base-content/10 px-5 py-4 sm:px-8">
+        <app-pagination
+          [total]="result.total"
+          [page]="page()"
+          [pageSize]="pageSize"
+          (pageChange)="page.set($event)"
+        />
+      </div>
+    }
+  </section>
+  <p class="mt-6 text-center text-xs text-base-content/45">
+    Tienda Vasquez · Tu espacio, a tu manera
+  </p>
+</main>

@@ -1,0 +1,46 @@
+<main class="mx-auto max-w-[1400px] px-[1.1rem] pb-8 pt-8 sm:px-11 sm:pt-12">
+  <header class="mb-8 border-b border-base-content/10 pb-6">
+    <p class="mb-2 flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-secondary"><span class="size-[7px] rounded-full bg-secondary"></span> Tu espacio de trabajo</p>
+    <h1 class="text-3xl font-medium tracking-tight sm:text-[2.35rem]">Todas las ventas</h1>
+    <p class="mt-2 text-sm text-base-content/60">Consulta tus ventas y vuelve a imprimir sus tickets.</p>
+  </header>
+  <section class="overflow-hidden rounded-[20px] border border-base-content/10 bg-base-200" aria-labelledby="ventas-title">
+    <div class="border-b border-base-content/10 p-5 sm:px-8 sm:py-6">
+      <p class="text-[0.67rem] font-semibold uppercase tracking-[0.12em] text-secondary">Movimientos recientes</p>
+      <h2 id="ventas-title" class="mt-2 text-lg font-medium">Ventas registradas</h2>
+      <p class="mt-1 text-sm text-base-content/55">Consulta las ventas por fecha.</p>
+      <form class="mt-4 flex flex-wrap items-end gap-3" (submit)="$event.preventDefault(); aplicar()">
+        <app-text-field inputId="fecha-inicio" label="Fecha de inicio" type="date" [value]="inicio()" (valueChange)="inicio.set($event)" />
+        <app-text-field inputId="fecha-fin" label="Fecha de fin" type="date" [value]="fin()" (valueChange)="fin.set($event)" />
+        <button type="submit" class="btn btn-primary mb-1 rounded-lg">Filtrar</button>
+      </form>
+      @if (errorFiltro()) { <p role="alert" class="mt-2 text-sm text-error">{{ errorFiltro() }}</p> }
+    </div>
+    @if (ventas.isPending()) { <p role="status" class="p-12 text-center text-sm">Cargando ventas…</p> }
+    @else if (ventas.isError()) { <div role="alert" class="p-12 text-center text-sm text-error">No se pudieron cargar las ventas. <button class="underline" (click)="ventas.refetch()">Reintentar</button></div> }
+    @else if (ventas.data(); as lista) {
+      <div class="overflow-x-auto px-5 sm:px-8">
+        <table class="table w-full text-sm">
+          <thead><tr><th>Ticket</th><th>Fecha</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Acción</th></tr></thead>
+          <tbody>
+            @for (v of lista.items; track v.id) {
+              <tr><td class="font-medium"><span class="break-all">{{ v.id }}</span></td><td class="whitespace-nowrap">{{ v.fecha | date:'dd/MM/yyyy, h:mm a':'-0500' }}</td><td>{{ v.cliente || 'Consumidor final' }}</td><td class="capitalize">{{ v.modalidad === 'fiado' ? 'Fiado' : v.medio }}</td><td class="whitespace-nowrap font-semibold">S/ {{ v.total }}</td><td><button type="button" class="btn btn-sm rounded-lg bg-primary/10 text-secondary" (click)="abrirTicket(v.id)">Ver ticket</button></td></tr>
+            } @empty { <tr><td colspan="6" class="py-12 text-center text-base-content/55">No hay ventas en las fechas seleccionadas.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      <div class="border-t border-base-content/10 p-5 sm:px-8"><app-pagination [total]="lista.total" [page]="page()" [pageSize]="10" (pageChange)="page.set($event)" /></div>
+    }
+  </section>
+</main>
+<ng-template #ticketDialog>
+  <app-dialog-shell title="Ticket de venta" titleId="ticket-historial-title" eyebrow="" description="" width="min(480px, calc(100vw - 2rem))" (closed)="cerrarTicket()">
+    <div class="p-5 sm:p-6">
+      @if (ticket.isPending()) { <p role="status" class="p-5 text-center text-sm">Cargando ticket…</p> }
+      @if (ticket.isError()) { <p role="alert" class="rounded-xl bg-error/10 p-4 text-sm text-error">No se pudo cargar el ticket. <button class="underline" (click)="ticket.refetch()">Reintentar</button></p> }
+      @if (ticket.data(); as t) { <app-ticket-contenido [ticket]="t" /> }
+      @if (ticketError()) { <p role="alert" class="mt-4 rounded-lg bg-error/10 p-3 text-sm text-error">{{ ticketError() }}</p> }
+      <div class="mt-5 flex flex-wrap justify-end gap-2"><button class="btn btn-ghost rounded-lg bg-base-300" (click)="cerrarTicket()">Cerrar</button><button class="btn btn-primary rounded-lg" [disabled]="ticket.isPending() || ticket.isError() || imprimiendo()" (click)="imprimirTicket()">{{ imprimiendo() ? 'Generando PDF…' : 'Abrir PDF para imprimir' }}</button></div>
+    </div>
+  </app-dialog-shell>
+</ng-template>

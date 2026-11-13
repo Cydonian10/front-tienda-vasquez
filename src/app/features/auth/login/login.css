@@ -1,0 +1,52 @@
+.login-page {
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgb(72 84 197 / 12%), transparent 48%),
+    radial-gradient(circle, rgb(167 174 218 / 18%) 1px, transparent 1.2px);
+  background-size:
+    100% 100%,
+    24px 24px;
+}
+
+.brand-icon {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(132 143 255 / 20%);
+  border-radius: 14px;
+  background: rgb(72 84 197 / 15%);
+  color: #a6aeff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.08em;
+}
+
+.brand-icon span {
+  display: inline;
+  color: #747fea;
+}
+
+.login-card {
+  border: 1px solid rgb(255 255 255 / 7%);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 35%);
+}
+
+:host-context([data-theme='vasquez-light']) .login-page {
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgb(81 89 220 / 6%), transparent 48%),
+    radial-gradient(circle, rgb(81 89 150 / 18%) 1px, transparent 1.2px);
+}
+
+:host-context([data-theme='vasquez-light']) .login-card {
+  border-color: rgb(38 39 54 / 5%);
+  box-shadow:
+    0 2px 4px rgb(25 27 44 / 5%),
+    0 12px 30px rgb(25 27 44 / 6%);
+}
+
+:host-context([data-theme='vasquez-light']) .brand-icon {
+  background: #e8e9fc;
+  border-color: #dadaf8;
+  color: #444cc2;
+}

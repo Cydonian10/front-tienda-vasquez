@@ -1,0 +1,17 @@
+<div class="min-h-screen bg-base-100 text-base-content" [attr.data-theme]="theme()">
+  <button
+    type="button"
+    class="btn btn-ghost btn-sm fixed right-4 top-4 z-50"
+    (click)="toggleTheme()"
+    [attr.aria-label]="theme() === 'vasquez-dark' ? 'Activar tema claro' : 'Activar tema oscuro'"
+  >
+    @if (theme() === 'vasquez-dark') {
+      <svg lucideSun [size]="18" [strokeWidth]="1.8" aria-hidden="true"></svg>
+      Tema claro
+    } @else {
+      <svg lucideMoon [size]="18" [strokeWidth]="1.8" aria-hidden="true"></svg>
+      Tema oscuro
+    }
+  </button>
+  <router-outlet />
+</div>

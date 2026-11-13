@@ -1,0 +1,85 @@
+<main class="login-page min-h-screen bg-base-100 px-4 py-10 text-base-content sm:px-6">
+  <div
+    class="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md flex-col justify-center"
+  >
+    <a
+      class="mb-8 flex items-center justify-center gap-3 text-base tracking-tight"
+      href="/"
+      aria-label="Tienda Vasquez, inicio"
+    >
+      <span class="brand-icon" aria-hidden="true">v<span>.</span></span>
+      <span class="text-base-content/75"
+        >tienda <strong class="font-semibold text-base-content">vasquez</strong></span
+      >
+    </a>
+
+    <section
+      class="login-card card rounded-box bg-base-200 p-6 sm:p-10"
+      aria-labelledby="login-title"
+    >
+      <header
+        class="mb-8 text-center [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_p]:mt-3 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-base-content/60"
+      >
+        <h1 id="login-title">Qué bueno verte de nuevo</h1>
+        <p>Iniciá sesión para entrar a tu panel.</p>
+      </header>
+
+      @if (expired && !error()) {
+        <div class="alert alert-info mb-4" role="status">
+          Tu sesión venció. Iniciá sesión nuevamente para continuar.
+        </div>
+      }
+      @if (error()) {
+        <div class="alert alert-error mb-4" role="alert">{{ error() }}</div>
+      }
+
+      <form class="flex flex-col" (submit)="submit($event)" novalidate>
+        <app-text-field
+          inputId="email"
+          label="Correo electrónico"
+          type="email"
+          [formField]="loginForm.email"
+          autocomplete="username"
+          placeholder="nombre@ejemplo.com"
+          [readOnly]="loading()"
+          errorMessage="Ingresá un correo electrónico válido."
+        />
+        <app-text-field
+          inputId="password"
+          label="Contraseña"
+          type="password"
+          [formField]="loginForm.password"
+          autocomplete="current-password"
+          placeholder="Tu contraseña"
+          [readOnly]="loading()"
+          errorMessage="Ingresá tu contraseña."
+        />
+        <button class="btn btn-primary mt-2 h-12 w-full" type="submit" [disabled]="loading()">
+          @if (loading()) {
+            <span class="loading loading-spinner loading-sm" aria-hidden="true"></span> Conectando…
+          } @else {
+            Iniciar sesión
+          }
+        </button>
+      </form>
+
+      <div class="divider text-sm text-base-content/60">o continuá con</div>
+      <button
+        type="button"
+        class="google-button btn h-12 w-full border-0 bg-base-300 text-base-content hover:bg-neutral"
+        (click)="googleLogin()"
+        [disabled]="loading()"
+      >
+        <app-icon name="google" [size]="18" />
+        Continuar con Google
+      </button>
+
+      <p class="mt-6 text-center text-sm text-base-content/60">
+        ¿Todavía no tenés acceso?<br /><span>Solicitá tu cuenta al responsable de la tienda.</span>
+      </p>
+    </section>
+    <footer class="mt-8 text-center text-xs text-base-content/50">
+      © 2026 Tienda Vasquez · Hecho para seguir creciendo.
+    </footer>
+  </div>
+</main>

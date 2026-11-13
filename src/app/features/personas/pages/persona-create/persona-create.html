@@ -1,0 +1,20 @@
+<app-persona-page-layout
+  title="Nueva persona"
+  subtitle="Completa los datos para registrar a una persona de tu equipo."
+  cardLabel="Registro de persona"
+  [backLabel]="access.puede(permisos.PERSONAS.LEER) ? 'Volver a personas' : 'Volver al inicio'"
+  [backDisabled]="mutation.isPending()"
+  (back)="back()"
+>
+  <app-persona-form
+    [saving]="mutation.isPending()"
+    [allowSubmit]="access.puede(permisos.PERSONAS.CREAR)"
+    [serverError]="
+      access.puede(permisos.PERSONAS.CREAR)
+        ? error()
+        : 'No se pudo validar el permiso para crear personas.'
+    "
+    (submitted)="save($event)"
+    (cancelled)="back()"
+  />
+</app-persona-page-layout>

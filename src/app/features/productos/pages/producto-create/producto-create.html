@@ -1,0 +1,204 @@
+<main class="mx-auto w-full max-w-[960px] p-4 sm:p-10">
+  <header class="mb-7 mt-4">
+    <div class="flex justify-between gap-3">
+      <p class="text-xs text-secondary">Inventario · Productos</p>
+      <a class="text-sm text-secondary" routerLink="/admin/productos">← Volver a productos</a>
+    </div>
+    <h1 class="mt-2 text-2xl font-semibold sm:text-3xl">
+      {{ id ? 'Editar producto' : 'Nuevo producto' }}
+    </h1>
+    <p class="mt-2 text-sm text-base-content/60">
+      {{
+        id
+          ? 'Actualiza la información de tu producto.'
+          : 'Agrega la información para incorporar un producto a tu catálogo.'
+      }}
+    </p>
+  </header>
+  @if (
+    (id && detalle.isPending()) ||
+    marcas.isPending() ||
+    categorias.isPending() ||
+    unidades.isPending()
+  ) {
+    <p role="status" class="p-8">Cargando catálogos...</p>
+  } @else if (id && detalle.isError()) {
+    <div role="alert" class="rounded-xl bg-error/10 p-5">
+      No se pudo cargar el producto.
+      <button type="button" class="btn btn-link" (click)="detalle.refetch()">Reintentar</button>
+    </div>
+  } @else if (marcas.isError() || categorias.isError() || unidades.isError()) {
+    <div role="alert" class="rounded-xl bg-error/10 p-5">
+      No se pudieron cargar los catálogos.
+      <button
+        type="button"
+        class="btn btn-link"
+        (click)="marcas.refetch(); categorias.refetch(); unidades.refetch()"
+      >
+        Reintentar
+      </button>
+    </div>
+  } @else {
+    <form (submit)="$event.preventDefault(); enviar()" class="space-y-5">
+      @if (error()) {
+        <p
+          role="alert"
+          class="rounded-xl border border-error/20 bg-error/10 p-4 text-sm text-error"
+        >
+          {{ error() }}
+        </p>
+      }
+      <section class="rounded-[18px] border border-base-content/10 bg-base-200 p-5 sm:p-8">
+        <h2 class="text-lg font-medium">Información del producto</h2>
+        <p class="mt-1 text-sm text-base-content/60">Los campos marcados con * son obligatorios.</p>
+        <div class="mt-6 grid gap-5 sm:grid-cols-2">
+          <app-text-field
+            inputId="producto-nombre"
+            label="Nombre"
+            [formField]="formulario.nombre"
+          />
+          <app-select-field
+            inputId="producto-marca"
+            label="Marca"
+            [options]="opcionesMarcas()"
+            [formField]="formulario.marcaId"
+          />
+          <app-text-field
+            inputId="producto-sku"
+            label="SKU (opcional)"
+            [formField]="formulario.sku"
+          />
+          <app-text-field
+            inputId="producto-barras"
+            label="Código de barras (opcional)"
+            [formField]="formulario.codigoBarras"
+          />
+          @if (!marcas.data()?.length) {
+            <p class="text-xs">Primero registra una marca en el menú Marcas.</p>
+          }
+        </div>
+      </section>
+      <section class="rounded-[18px] border border-base-content/10 bg-base-200 p-5 sm:p-8">
+        <h2 class="text-lg font-medium">Precio, stock y unidades</h2>
+        <p class="mt-1 text-sm text-base-content/60">
+          El precio y el stock corresponden a la unidad principal.
+        </p>
+        <div class="mt-6 grid gap-5 sm:grid-cols-3">
+          <div>
+            <app-select-field
+              inputId="producto-principal"
+              label="Unidad principal"
+              [options]="opcionesUnidades()"
+              [formField]="formulario.principal"
+            />
+            @if (id) {
+              <span class="mt-1 block text-xs text-base-content/60"
+                >La unidad principal no se puede cambiar.</span
+              >
+            }
+          </div>
+          <app-number-field
+            inputId="producto-precio"
+            label="Precio"
+            [formField]="formulario.precio"
+          />
+          <app-number-field
+            inputId="producto-stock"
+            [label]="id ? 'Stock' : 'Stock inicial'"
+            [formField]="formulario.stock"
+          />
+        </div>
+        <div class="mt-6 border-t border-base-content/10 pt-5">
+          <h3 class="font-medium">
+            Otras unidades <span class="text-sm font-normal text-base-content/50">(opcional)</span>
+          </h3>
+          <p class="mt-1 text-xs text-base-content/60">
+            Indica cuántas unidades principales contiene cada una. Ejemplo: una caja contiene 12
+            unidades.
+          </p>
+          @for (item of secundarias; track $index; let i = $index) {
+            <app-unidad-secundaria
+              [index]="i"
+              [options]="opcionesUnidades()"
+              [(unidadId)]="item.unidadId"
+              [(factor)]="item.factor"
+              (quitar)="quitarUnidad(i)"
+            />
+          }
+          <button type="button" class="btn btn-outline btn-sm mt-4" (click)="agregarUnidad()">
+            + Agregar unidad
+          </button>
+        </div>
+      </section>
+      <section class="rounded-[18px] border border-base-content/10 bg-base-200 p-5 sm:p-8">
+        <h2 class="text-lg font-medium">
+          Categorías <span class="text-sm font-normal text-base-content/50">(opcional)</span>
+        </h2>
+        <p class="mt-1 text-sm text-base-content/60">
+          Selecciona todas las categorías que correspondan.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-4">
+          @for (categoriaItem of categorias.data(); track categoriaItem.id) {
+            <label class="flex items-center gap-2 text-sm"
+              ><input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                [checked]="categoriaIds.includes(categoriaItem.id)"
+                (change)="categoria(categoriaItem.id, $event)"
+              />{{ categoriaItem.nombre }}</label
+            >
+          } @empty {
+            <p class="text-sm text-base-content/60">No hay categorías registradas.</p>
+          }
+        </div>
+      </section>
+      <section class="rounded-[18px] border border-base-content/10 bg-base-200 p-5 sm:p-8">
+        <h2 class="text-lg font-medium">
+          Imágenes <span class="text-sm font-normal text-base-content/50">(opcional)</span>
+        </h2>
+        <p class="mt-1 text-sm text-base-content/60">
+          Hasta 10 imágenes JPG, PNG o WebP, de 500 KB cada una.
+        </p>
+        <app-image-dropzone class="mt-4 block" inputId="producto-imagenes" help="JPG, PNG o WebP · Máximo 500 KB por imagen" [disabled]="guardar.isPending() || editar.isPending()" (filesChange)="seleccionarImagenes($event)" />
+        <div class="mt-4 flex flex-wrap gap-4">
+          @for (imagen of existentes; track imagen.id; let i = $index) {
+            <div class="w-28">
+              <img
+                [src]="imagen.url"
+                [alt]="'Imagen actual ' + (i + 1)"
+                class="h-24 w-28 rounded-xl object-cover"
+              /><button
+                type="button"
+                class="mt-1 text-sm text-error"
+                (click)="existentes.splice(i, 1)"
+              >
+                Quitar imagen
+              </button>
+            </div>
+          }
+          @for (imagen of imagenes; track imagen.url; let i = $index) {
+            <div class="w-28">
+              <img
+                [src]="imagen.url"
+                [alt]="'Vista previa ' + (i + 1)"
+                class="h-24 w-28 rounded-xl object-cover"
+              /><button type="button" class="mt-1 text-sm text-error" (click)="quitarImagen(i)">
+                Quitar imagen
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+      <div class="flex justify-end gap-3">
+        <a class="btn btn-ghost" routerLink="/admin/productos">Cancelar</a
+        ><button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="guardar.isPending() || editar.isPending()"
+        >
+          {{ guardar.isPending() || editar.isPending() ? 'Guardando...' : 'Guardar producto' }}
+        </button>
+      </div>
+    </form>
+  }
+</main>

@@ -1,0 +1,17 @@
+<main class="persona-page">
+  <header>
+    <div class="flex justify-between items-center">
+      <p class="eyebrow">Administración · Personas</p>
+      <button class="back-link" type="button" [disabled]="backDisabled()" (click)="back.emit()">
+        <svg lucideArrowLeft [size]="16" aria-hidden="true"></svg>
+        {{ backLabel() }}
+      </button>
+    </div>
+    <h1>{{ title() }}</h1>
+    <p class="subtitle">{{ subtitle() }}</p>
+  </header>
+
+  <section class="form-card" [attr.aria-label]="cardLabel()">
+    <ng-content />
+  </section>
+</main>

@@ -1,0 +1,153 @@
+<div class="admin-shell">
+  @if (sidebarOpen()) {
+    <button
+      class="sidebar-backdrop"
+      type="button"
+      aria-label="Cerrar menú"
+      (click)="sidebarOpen.set(false)"
+    ></button>
+  }
+  <aside class="sidebar" [class.sidebar-open]="sidebarOpen()" aria-label="Menú de administración">
+    <a routerLink="/admin" class="brand" (click)="sidebarOpen.set(false)">
+      <span class="brand-mark">v.</span>
+      <span class="brand-name">tienda <strong>vasquez</strong></span>
+      <span class="brand-label">ADMIN</span>
+    </a>
+    <nav class="sidebar-nav" aria-label="Navegación principal">
+      @if (access.perfil.isPending()) {
+        <p class="section-label" role="status">Cargando permisos...</p>
+      } @else if (access.perfil.isError()) {
+        <div role="alert">
+          <p class="section-label">No se pudo cargar el perfil.</p>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="access.perfil.refetch()">
+            Reintentar
+          </button>
+        </div>
+      }
+      @for (section of sections(); track section.label) {
+        <div class="nav-section">
+          <p class="section-label">{{ section.label }}</p>
+          @for (item of section.items; track item.label) {
+            @if (item.children) {
+              <button
+                type="button"
+                class="nav-item"
+                [attr.aria-expanded]="expanded().includes(item.label)"
+                (click)="toggleGroup(item.label)"
+              >
+                <ng-container *ngTemplateOutlet="menuIcon; context: { $implicit: item.icon }" />
+                <span>{{ item.label }}</span>
+                <svg
+                  class="chevron"
+                  [class.expanded]="expanded().includes(item.label)"
+                  lucideChevronDown
+                  [size]="14"
+                  aria-hidden="true"
+                ></svg>
+              </button>
+              <div
+                class="submenu-panel"
+                [style.max-height.px]="
+                  expanded().includes(item.label) ? item.children.length * 40 : 0
+                "
+                [class.is-open]="expanded().includes(item.label)"
+                [attr.inert]="expanded().includes(item.label) ? null : ''"
+              >
+                <div class="subnav">
+                  @for (child of item.children; track child.path) {
+                    <a
+                      [routerLink]="child.path"
+                      routerLinkActive="active"
+                      [routerLinkActiveOptions]="{ exact: true }"
+                      (click)="sidebarOpen.set(false)"
+                      >{{ child.label }}</a
+                    >
+                  }
+                </div>
+              </div>
+            } @else {
+              <a
+                class="nav-item"
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="sidebarOpen.set(false)"
+              >
+                <ng-container *ngTemplateOutlet="menuIcon; context: { $implicit: item.icon }" />
+                <span>{{ item.label }}</span>
+              </a>
+            }
+          }
+        </div>
+      }
+    </nav>
+    <div class="sidebar-footer">
+      <span class="user-avatar">TV</span>
+      <span class="user-info"
+        ><strong>{{ access.perfil.data()?.nickname || 'Mi cuenta' }}</strong
+        ><small>Sesión activa</small></span
+      >
+      <button
+        class="logout"
+        type="button"
+        (click)="logout()"
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+      >
+        <svg lucideLogOut [size]="18" aria-hidden="true"></svg>
+      </button>
+    </div>
+  </aside>
+
+  <div class="admin-content">
+    <header class="topbar">
+      <button
+        type="button"
+        class="menu-toggle"
+        (click)="sidebarOpen.set(!sidebarOpen())"
+        [attr.aria-expanded]="sidebarOpen()"
+        [attr.aria-label]="sidebarOpen() ? 'Cerrar menú' : 'Abrir menú'"
+      >
+        @if (sidebarOpen()) {
+          <svg lucideX [size]="20" aria-hidden="true"></svg>
+        } @else {
+          <svg lucideMenu [size]="20" aria-hidden="true"></svg>
+        }
+      </button>
+      <div class="breadcrumbs">
+        <span>General</span><span class="slash">/</span><strong>Administración</strong>
+      </div>
+      <div class="workspace-status"><span></span> Espacio de trabajo</div>
+    </header>
+    <router-outlet />
+  </div>
+</div>
+
+<ng-template #menuIcon let-icon>
+  @switch (icon) {
+    @case ('home') {
+      <svg lucideLayoutDashboard [size]="18" aria-hidden="true"></svg>
+    }
+    @case ('box') {
+      <svg lucideBox [size]="18" aria-hidden="true"></svg>
+    }
+    @case ('building') {
+      <svg lucideBuilding2 [size]="18" aria-hidden="true"></svg>
+    }
+    @case ('cart') {
+      <svg lucideShoppingCart [size]="18" aria-hidden="true"></svg>
+    }
+    @case ('users') {
+      <svg lucideUsers [size]="18" aria-hidden="true"></svg>
+    }
+    @case ('chart') {
+      <svg lucideBarChart3 [size]="18" aria-hidden="true"></svg>
+    }
+    @case ('settings') {
+      <svg lucideSettings [size]="18" aria-hidden="true"></svg>
+    }
+    @case ('help') {
+      <svg lucideCircleHelp [size]="18" aria-hidden="true"></svg>
+    }
+  }
+</ng-template>

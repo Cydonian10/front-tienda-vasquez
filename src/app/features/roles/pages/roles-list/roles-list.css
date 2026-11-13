@@ -1,0 +1,7 @@
+:host-context([data-theme='vasquez-light']) .roles-accent-text {
+  color: var(--color-primary);
+}
+
+:host-context([data-theme='vasquez-light']) .roles-active-status {
+  color: color-mix(in srgb, var(--color-success) 85%, var(--color-base-content));
+}

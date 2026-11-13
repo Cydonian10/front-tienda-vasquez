@@ -1,0 +1,201 @@
+<main class="mx-auto max-w-[1150px] px-[1.1rem] pb-8 pt-8 sm:px-11 sm:pt-12">
+  <header class="mb-8 flex items-center justify-between gap-4">
+    <div>
+      <p
+        class="mb-2 flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-secondary"
+      >
+        <span class="size-[7px] rounded-full bg-secondary" aria-hidden="true"></span> Administración
+      </p>
+      <h1 class="text-3xl font-medium tracking-tight sm:text-[2.35rem]">Marcas</h1>
+      <p class="mt-2 text-sm text-base-content/60">
+        Organiza las marcas de tus productos en un solo lugar.
+      </p>
+    </div>
+    <span
+      class="hidden size-[52px] shrink-0 place-items-center rounded-[17px] border border-primary/20 bg-primary/10 text-secondary sm:grid"
+    >
+      <svg lucideTag [size]="24" aria-hidden="true"></svg>
+    </span>
+  </header>
+
+  @if (message()) {
+    <p
+      class="mb-5 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm"
+      role="status"
+    >
+      {{ message() }}
+    </p>
+  }
+  @if (error()) {
+    <p
+      class="mb-5 rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error"
+      role="alert"
+    >
+      {{ error() }}
+    </p>
+  }
+
+  <section
+    class="overflow-hidden rounded-[20px] border border-base-content/10 bg-base-200 shadow-[0_14px_35px_rgba(0,0,0,0.05)]"
+    aria-labelledby="marcas-title"
+  >
+    <div
+      class="flex flex-col gap-4 border-b border-base-content/10 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-6"
+    >
+      <div class="flex items-center gap-3">
+        <span
+          class="grid size-[42px] shrink-0 place-items-center rounded-[13px] bg-primary/10 text-secondary"
+        >
+          <svg lucideTag [size]="19" aria-hidden="true"></svg>
+        </span>
+        <div>
+          <h2 id="marcas-title" class="text-[1.05rem] font-medium">Marcas de productos</h2>
+          <p class="mt-1 text-xs text-base-content/60 sm:text-sm">
+            Gestiona las marcas de tu catálogo.
+          </p>
+        </div>
+      </div>
+      @if (access.puede(permisos.MARCAS.CREAR)) {
+        <a
+          class="btn btn-primary min-h-0 h-auto rounded-[10px] px-4 py-3 text-xs font-medium"
+          routerLink="/admin/marcas/nueva"
+        >
+          <svg lucidePlus [size]="17" aria-hidden="true"></svg> Nueva marca
+        </a>
+      }
+    </div>
+    <div
+      class="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8"
+    >
+      <p class="text-[0.83rem] font-medium">
+        Listado de marcas
+        @if (marcas.data(); as result) {
+          <span
+            class="ml-1 inline-grid min-w-[23px] place-items-center rounded-[7px] bg-primary/15 px-1.5 py-1 text-[0.7rem] text-secondary"
+            >{{ result.total }}</span
+          >
+        }
+      </p>
+      <label
+        class="flex items-center gap-2 rounded-[10px] border border-base-content/10 bg-base-300 px-3 py-2.5 text-base-content/60 focus-within:outline-2 focus-within:outline-secondary sm:w-[230px]"
+      >
+        <svg lucideSearch [size]="16" aria-hidden="true"></svg>
+        <span class="sr-only">Buscar marcas</span>
+        <input
+          class="w-full min-w-0 bg-transparent text-xs text-base-content outline-none"
+          type="search"
+          maxlength="100"
+          placeholder="Buscar por nombre..."
+          (input)="buscar($event)"
+        />
+      </label>
+    </div>
+
+    @if (marcas.isPending()) {
+      <p class="p-12 text-center text-sm text-base-content/60" role="status">Cargando marcas...</p>
+    } @else if (marcas.isError()) {
+      <div class="p-12 text-center" role="alert">
+        <h3 class="font-medium">No se pudo cargar el listado</h3>
+        <p class="mt-2 text-sm text-base-content/60">{{ listError() }}</p>
+        <button
+          class="mt-4 text-sm font-medium text-secondary"
+          type="button"
+          (click)="marcas.refetch()"
+        >
+          Reintentar
+        </button>
+      </div>
+    } @else if (marcas.data(); as result) {
+      <app-data-table label="Listado de marcas, desplazar horizontalmente">
+        <table class="w-full min-w-[580px] border-collapse text-left">
+          <thead
+            class="bg-base-content/[0.04] text-[0.67rem] font-medium uppercase tracking-wider text-base-content/50"
+          >
+            <tr>
+              <th scope="col" class="px-8 py-3 font-medium">Marca</th>
+              <th scope="col" class="px-4 py-3 font-medium">Descripción</th>
+              <th scope="col" class="px-8 py-3 text-right">
+                <span class="sr-only">Acciones</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (marca of result.items; track marca.id) {
+              <tr class="border-b border-base-content/[0.07] text-sm hover:bg-base-content/[0.03]">
+                <td class="px-8 py-4">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="grid size-[38px] shrink-0 place-items-center rounded-xl bg-primary/15 text-secondary"
+                      ><svg lucideTag [size]="17" aria-hidden="true"></svg
+                    ></span>
+                    <div>
+                      <strong class="block font-medium">{{ marca.nombre }}</strong
+                      ><span class="mt-0.5 block text-xs text-base-content/50"
+                        >Marca de producto</span
+                      >
+                    </div>
+                  </div>
+                </td>
+                <td class="max-w-80 px-4 py-4 text-base-content/70">
+                  <span class="break-words">{{ marca.descripcion || 'Sin descripción' }}</span>
+                </td>
+                <td class="whitespace-nowrap px-8 py-4 text-right">
+                  @if (access.puede(permisos.MARCAS.EDITAR)) {
+                    <a
+                      class="btn btn-ghost btn-sm gap-1.5 rounded-lg bg-base-300 text-xs font-normal"
+                      [routerLink]="['/admin/marcas', marca.id, 'editar']"
+                      [attr.aria-label]="'Editar ' + marca.nombre"
+                      ><svg lucidePencil [size]="15" aria-hidden="true"></svg> Editar</a
+                    >
+                  }
+                  @if (access.puede(permisos.MARCAS.ELIMINAR)) {
+                    <button
+                      class="btn btn-ghost btn-sm ml-1 gap-1.5 rounded-lg text-xs font-normal text-error"
+                      type="button"
+                      [disabled]="eliminar.isPending()"
+                      [attr.aria-label]="'Eliminar ' + marca.nombre"
+                      (click)="borrar(marca)"
+                    >
+                      <svg lucideTrash2 [size]="15" aria-hidden="true"></svg> Eliminar
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-data-table>
+      @if (!result.items.length) {
+        <div class="flex flex-col items-center px-4 py-14 text-center">
+          <span
+            class="mb-4 grid size-[54px] place-items-center rounded-[17px] bg-primary/10 text-secondary"
+            ><svg lucideTagPlus [size]="24" aria-hidden="true"></svg
+          ></span>
+          @if (search()) {
+            <h3 class="text-[0.95rem] font-medium">No encontramos marcas</h3>
+            <p class="mt-2 text-sm text-base-content/50">Prueba con otro nombre.</p>
+          } @else {
+            <h3 class="text-[0.95rem] font-medium">Tu catálogo empieza aquí</h3>
+            <p class="mt-2 text-sm text-base-content/50">Aún no hay marcas registradas.</p>
+            @if (access.puede(permisos.MARCAS.CREAR)) {
+              <a class="mt-4 text-sm font-medium text-secondary" routerLink="/admin/marcas/nueva"
+                >Agregar primera marca <span aria-hidden="true">→</span></a
+              >
+            }
+          }
+        </div>
+      }
+      <div class="border-t border-base-content/10 px-5 py-4 sm:px-8">
+        <app-pagination
+          [total]="result.total"
+          [page]="page()"
+          [pageSize]="pageSize"
+          (pageChange)="page.set($event)"
+        />
+      </div>
+    }
+  </section>
+  <p class="mt-6 text-center text-xs text-base-content/45">
+    Tienda Vasquez · Tu espacio, a tu manera
+  </p>
+</main>

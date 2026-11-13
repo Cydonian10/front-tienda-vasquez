@@ -1,0 +1,293 @@
+<main class="mx-auto max-w-4xl px-4 py-8 sm:px-8 sm:py-12">
+  <header class="mb-7 mt-5">
+    <div class="flex justify-between items-center">
+      <p class="text-xs font-semibold uppercase tracking-widest text-secondary">
+        Administración / Usuarios
+      </p>
+      <button
+        class="btn btn-ghost btn-sm -ml-3 text-secondary"
+        type="button"
+        [disabled]="creando() || actualizar.isPending()"
+        (click)="volver()"
+      >
+        <svg lucideArrowLeft [size]="16" aria-hidden="true"></svg>
+        {{ back() === '/admin' ? 'Volver al inicio' : 'Volver a usuarios' }}
+      </button>
+    </div>
+    <h1 class="mt-2 text-3xl font-medium">{{ id() ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+    <p class="mt-2 text-sm opacity-60">
+      {{
+        id()
+          ? 'Actualiza la cuenta y su persona vinculada.'
+          : 'Selecciona una persona y crea su cuenta de acceso.'
+      }}
+    </p>
+  </header>
+  @if (id() && usuario.isPending()) {
+    <p role="status" class="p-6">Cargando usuario...</p>
+  } @else if (id() && usuario.isError()) {
+    <div role="alert" class="rounded-2xl bg-base-200 p-6">
+      <p>No se pudo cargar el usuario.</p>
+      <button class="btn btn-sm mt-3" type="button" (click)="usuario.refetch()">Reintentar</button>
+    </div>
+  } @else {
+    <form
+      class="overflow-hidden rounded-3xl border border-base-content/10 bg-base-200 shadow-xl shadow-black/5"
+      (submit)="$event.preventDefault(); guardar()"
+    >
+      <div class="border-b border-base-content/10 p-6">
+        <h2 class="font-medium">{{ id() ? 'Datos de la cuenta' : 'Crear cuenta de usuario' }}</h2>
+        <p class="mt-1 text-sm opacity-60">
+          {{
+            id()
+              ? 'Los campos marcados son obligatorios.'
+              : 'Primero selecciona una persona registrada.'
+          }}
+        </p>
+      </div>
+      <div class="space-y-6 p-6">
+        @if (!id()) {
+          <ng-container *ngTemplateOutlet="selectorPersona" />
+        }
+        @if (id() || persona()) {
+          @if (!id()) {
+            <div class="border-t border-base-content/10 pt-5">
+              <h3 class="font-medium">Datos de acceso</h3>
+              <p class="mt-1 text-sm text-base-content/70">
+                Completa los datos de la cuenta para la persona seleccionada.
+              </p>
+            </div>
+          }
+          <div class="grid gap-4 sm:grid-cols-2">
+            <app-text-field
+              inputId="usuario-nickname"
+              label="Nombre de usuario"
+              name="nickname"
+              [required]="true"
+              [maxLength]="100"
+              [value]="nickname()"
+              (valueChange)="nickname.set($event)"
+              [disabled]="creando() || actualizar.isPending()"
+            /><app-text-field
+              inputId="usuario-email"
+              label="Correo electrónico"
+              name="email"
+              type="email"
+              autocomplete="email"
+              [required]="true"
+              [maxLength]="254"
+              [value]="email()"
+              (valueChange)="email.set($event)"
+              [disabled]="creando() || actualizar.isPending()"
+            />
+          </div>
+          @if (!id()) {
+            <div>
+              <app-text-field
+                inputId="usuario-password"
+                label="Contraseña inicial"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                [required]="true"
+                [maxLength]="128"
+                [value]="password()"
+                (valueChange)="password.set($event)"
+                [disabled]="creando()"
+              />
+              <p class="mt-1 text-xs opacity-60">
+                Mínimo 12 caracteres. La contraseña no se muestra en listados ni se guarda en caché.
+              </p>
+            </div>
+          }
+        }
+        <ng-template #selectorPersona>
+          <section
+            class="rounded-2xl border border-base-content/10 p-4"
+            aria-labelledby="persona-titulo"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="persona-titulo" class="font-medium">
+                  Persona vinculada
+                  <span class="text-xs font-normal opacity-60">{{
+                    id() ? '· Opcional' : '· Obligatoria'
+                  }}</span>
+                </h2>
+                <p class="mt-1 text-sm opacity-60">
+                  Relaciona la cuenta con una persona registrada.
+                </p>
+              </div>
+              @if (access.puede(permisos.PERSONAS.LEER) && (id() || persona())) {
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [disabled]="creando() || actualizar.isPending()"
+                  [attr.aria-expanded]="mostrarPersonas()"
+                  (click)="mostrarPersonas.set(!mostrarPersonas())"
+                >
+                  {{
+                    mostrarPersonas()
+                      ? 'Cerrar búsqueda'
+                      : persona()
+                        ? 'Cambiar persona'
+                        : 'Buscar persona'
+                  }}
+                </button>
+              }
+            </div>
+            @if (persona(); as selected) {
+              <div
+                class="mt-4 flex items-center justify-between gap-3 rounded-xl bg-base-300 p-3 text-sm"
+              >
+                <span>{{ selected.nombres }} {{ selected.apellidos }}</span>
+                @if (access.puede(permisos.PERSONAS.LEER)) {
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs"
+                    [disabled]="creando() || actualizar.isPending()"
+                    (click)="elegirPersona(null)"
+                  >
+                    {{ id() ? 'Desvincular' : 'Quitar selección' }}
+                  </button>
+                }
+              </div>
+            } @else {
+              <p class="mt-4 text-sm opacity-60">
+                {{
+                  id()
+                    ? 'Sin persona vinculada.'
+                    : 'Busca y selecciona la persona para esta cuenta.'
+                }}
+              </p>
+            }
+            @if (!access.puede(permisos.PERSONAS.LEER)) {
+              <p class="mt-2 text-xs opacity-60">
+                {{
+                  id()
+                    ? 'Necesitas permiso de lectura de personas para modificar la vinculación.'
+                    : 'Necesitas permiso de lectura de personas para crear un usuario.'
+                }}
+              </p>
+            }
+            @if (mostrarPersonas() && access.puede(permisos.PERSONAS.LEER)) {
+              <div class="mt-4 space-y-2">
+                <label class="input input-sm w-full bg-base-300"
+                  ><span class="sr-only">Buscar persona por nombre</span
+                  ><input
+                    type="search"
+                    placeholder="Buscar por nombre..."
+                    [value]="personaSearch()"
+                    [disabled]="creando() || actualizar.isPending()"
+                    (input)="buscarPersona($event)"
+                /></label>
+                @if (personas.isPending()) {
+                  <p class="py-2 text-sm opacity-60" role="status">Buscando personas...</p>
+                } @else if (personas.isError()) {
+                  <p class="text-sm" role="alert">
+                    No se pudieron cargar las personas.
+                    <button type="button" class="btn btn-ghost btn-xs" (click)="personas.refetch()">
+                      Reintentar
+                    </button>
+                  </p>
+                } @else {
+                  @for (item of personas.data()?.items; track item.id) {
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm hover:bg-base-300"
+                      [disabled]="creando() || actualizar.isPending()"
+                      [attr.aria-label]="'Seleccionar a ' + item.nombres + ' ' + item.apellidos"
+                      (click)="elegirPersona(item)"
+                    >
+                      <span>{{ item.nombres }} {{ item.apellidos }}</span
+                      ><span class="text-secondary">Seleccionar</span>
+                    </button>
+                  } @empty {
+                    <p class="py-2 text-sm opacity-60">
+                      {{
+                        personaSearch()
+                          ? 'No hay personas que coincidan.'
+                          : 'No hay personas registradas.'
+                      }}
+                    </p>
+                    @if (!id() && !personaSearch() && access.puede(permisos.PERSONAS.CREAR)) {
+                      <a
+                        class="btn btn-ghost btn-sm text-secondary"
+                        routerLink="/admin/personas/nueva"
+                      >
+                        Registrar persona
+                      </a>
+                    }
+                  }
+                  <div class="flex items-center justify-between text-xs">
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-xs"
+                      [disabled]="creando() || actualizar.isPending() || personaPage() <= 1"
+                      (click)="personaPage.set(personaPage() - 1)"
+                    >
+                      Anterior</button
+                    ><span
+                      >Página {{ personaPage() }} de {{ personas.data()?.totalPages || 1 }}</span
+                    ><button
+                      type="button"
+                      class="btn btn-ghost btn-xs"
+                      [disabled]="
+                        creando() ||
+                        actualizar.isPending() ||
+                        personaPage() >= (personas.data()?.totalPages || 1)
+                      "
+                      (click)="personaPage.set(personaPage() + 1)"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+        </ng-template>
+        @if (id()) {
+          <ng-container *ngTemplateOutlet="selectorPersona" />
+        }
+        @if (!id()) {
+          <p class="rounded-xl bg-base-300 p-4 text-sm opacity-75">
+            La cuenta se crea sin roles. Podrás asignarlos desde «Información» cuando tengas permiso
+            para hacerlo.
+          </p>
+        }
+        @if (error()) {
+          <p class="text-sm text-error" role="alert">{{ error() }}</p>
+        }
+      </div>
+      <footer class="flex justify-end gap-3 border-t border-base-content/10 p-6">
+        <button
+          class="btn btn-ghost btn-sm"
+          type="button"
+          [disabled]="creando() || actualizar.isPending()"
+          (click)="volver()"
+        >
+          Cancelar
+        </button>
+        <button
+          class="btn btn-primary btn-sm"
+          type="submit"
+          [disabled]="
+            creando() ||
+            actualizar.isPending() ||
+            (!id() && (!persona() || !access.puede(permisos.PERSONAS.LEER))) ||
+            !access.puede(id() ? permisos.USUARIOS.EDITAR : permisos.USUARIOS.CREAR)
+          "
+        >
+          {{
+            creando() || actualizar.isPending()
+              ? 'Guardando...'
+              : id()
+                ? 'Guardar cambios'
+                : 'Crear usuario'
+          }}
+        </button>
+      </footer>
+    </form>
+  }
+</main>

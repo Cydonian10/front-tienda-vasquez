@@ -1,0 +1,11 @@
+.status {
+  padding: 2rem;
+  text-align: center;
+}
+.status h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.status p {
+  margin: 1rem 0;
+}

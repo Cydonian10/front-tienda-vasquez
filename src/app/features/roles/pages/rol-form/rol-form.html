@@ -1,0 +1,332 @@
+<main class="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
+  <header class="mb-7 mt-5">
+    <div class="flex justify-between">
+      <p class="text-xs font-semibold uppercase tracking-widest text-secondary">
+        Administración / Roles
+      </p>
+      <a class="btn btn-ghost btn-sm -ml-3 text-secondary" [routerLink]="back()">
+        <svg lucideArrowLeft [size]="16" aria-hidden="true"></svg>
+        {{ back() === '/admin' ? 'Volver al inicio' : 'Volver a roles' }}
+      </a>
+    </div>
+    <h1 class="mt-2 text-3xl font-medium">{{ id() ? 'Administrar rol' : 'Crear rol' }}</h1>
+
+    <p class="mt-2 text-sm opacity-60">
+      {{
+        id()
+          ? 'Revisa los datos y define los permisos del rol.'
+          : 'Define los datos y selecciona los permisos antes de crear el rol.'
+      }}
+    </p>
+  </header>
+  @if (!id()) {
+    <nav
+      class="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 px-5 py-4 text-sm"
+      aria-label="Pasos para crear el rol"
+    >
+      <button
+        type="button"
+        class="flex items-center gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+        [disabled]="crear.isPending()"
+        [attr.aria-current]="paso() === 1 ? 'step' : null"
+        (click)="paso.set(1); error.set('')"
+      >
+        <span
+          class="grid size-8 shrink-0 place-items-center rounded-xl"
+          [class]="
+            paso() === 1 ? 'bg-primary text-primary-content' : 'bg-base-300 text-base-content/70'
+          "
+          >1</span
+        >
+        <span class="font-medium">Datos del rol</span>
+      </button>
+      <span class="text-base-content/50" aria-hidden="true">────────</span>
+      <button
+        type="button"
+        class="flex items-center gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+        [disabled]="crear.isPending()"
+        [attr.aria-current]="paso() === 2 ? 'step' : null"
+        (click)="siguiente()"
+      >
+        <span
+          class="grid size-8 shrink-0 place-items-center rounded-xl"
+          [class]="
+            paso() === 2 ? 'bg-primary text-primary-content' : 'bg-base-300 text-base-content/70'
+          "
+          >2</span
+        >
+        <span>Asignar permisos</span>
+      </button>
+    </nav>
+  }
+  @if (id() && rol.isPending()) {
+    <p class="p-6" role="status">Cargando rol...</p>
+  } @else if (id() && rol.isError()) {
+    <div class="rounded-2xl bg-base-200 p-6" role="alert">
+      <p>No se pudo cargar el rol.</p>
+      <button class="btn btn-sm mt-3" type="button" (click)="rol.refetch()">Reintentar</button>
+    </div>
+  } @else {
+    @if (rol.data()?.sistema) {
+      <p class="mb-4 rounded-2xl bg-primary/10 p-4 text-sm" role="status">
+        Este rol del sistema está protegido y sus permisos no se pueden modificar desde aquí.
+      </p>
+    }
+    @if (id() && !puedeAdministrarActual()) {
+      <p class="mb-4 rounded-2xl bg-warning/10 p-4 text-sm" role="status">
+        Este rol contiene permisos que tu cuenta no posee; puedes consultarlo, pero no modificarlo.
+      </p>
+    }
+    @if (id() || paso() === 1) {
+      <form
+        class="rounded-3xl border border-base-content/10 bg-base-200 p-6 shadow-xl shadow-black/5"
+        (submit)="$event.preventDefault(); guardarDatos()"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="font-medium">Información del rol</h2>
+            <p class="mt-1 text-sm opacity-60">Un nombre claro ayuda a reconocer su función.</p>
+          </div>
+          @if (rol.data()?.sistema) {
+            <span class="badge badge-outline">Protegido</span>
+          }
+        </div>
+        <div class="mt-5 grid gap-4">
+          <app-text-field
+            inputId="rol-nombre"
+            label="Nombre del rol"
+            name="nombre"
+            placeholder="Ej. Vendedor"
+            [required]="true"
+            [maxLength]="100"
+            [value]="nombre()"
+            (valueChange)="nombre.set($event)"
+            [disabled]="
+              crear.isPending() ||
+              actualizar.isPending() ||
+              (id()
+                ? !access.puede(permisos.ROLES.EDITAR) ||
+                  !!rol.data()?.sistema ||
+                  !puedeAdministrarActual()
+                : !access.puede(permisos.ROLES.CREAR))
+            "
+          />
+          <label class="form-control"
+            ><span class="mb-2 block text-sm font-medium"
+              >Descripción <span class="text-xs font-normal opacity-60">· Opcional</span></span
+            ><textarea
+              class="textarea w-full bg-base-300"
+              maxlength="1000"
+              rows="3"
+              [value]="descripcion()"
+              (input)="descripcion.set($any($event.target).value)"
+              [disabled]="
+                crear.isPending() ||
+                actualizar.isPending() ||
+                (id()
+                  ? !access.puede(permisos.ROLES.EDITAR) ||
+                    !!rol.data()?.sistema ||
+                    !puedeAdministrarActual()
+                  : !access.puede(permisos.ROLES.CREAR))
+              "
+              placeholder="Ej. Atención de clientes y consulta de ventas"
+            ></textarea>
+          </label>
+          <label class="flex items-center gap-3 text-sm"
+            ><input
+              class="checkbox checkbox-primary checkbox-sm"
+              type="checkbox"
+              [checked]="activo()"
+              (change)="activo.set($any($event.target).checked)"
+              [disabled]="
+                crear.isPending() ||
+                actualizar.isPending() ||
+                (id()
+                  ? !access.puede(permisos.ROLES.EDITAR) ||
+                    !!rol.data()?.sistema ||
+                    !puedeAdministrarActual()
+                  : !access.puede(permisos.ROLES.CREAR))
+              "
+            />
+            Rol activo
+            <span class="text-xs opacity-60">Los roles inactivos no conceden permisos.</span></label
+          >
+        </div>
+        @if (
+          (!id() && access.puede(permisos.ROLES.CREAR)) ||
+          (id() &&
+            access.puede(permisos.ROLES.EDITAR) &&
+            !rol.data()?.sistema &&
+            puedeAdministrarActual())
+        ) {
+          <div
+            class="mt-6 flex flex-col-reverse gap-3 border-t border-base-content/10 pt-5 sm:flex-row sm:justify-end"
+          >
+            @if (!id()) {
+              <a class="btn bg-base-300" [routerLink]="back()">Cancelar</a>
+            }
+            <button
+              class="btn btn-primary"
+              type="submit"
+              [disabled]="crear.isPending() || actualizar.isPending()"
+            >
+              {{
+                crear.isPending() || actualizar.isPending()
+                  ? 'Guardando...'
+                  : id()
+                    ? 'Guardar datos'
+                    : 'Siguiente'
+              }}
+            </button>
+          </div>
+        }
+      </form>
+    }
+    @if (id() || paso() === 2) {
+      <section
+        class="mt-5 rounded-3xl border border-base-content/10 bg-base-200 p-6"
+        aria-labelledby="permisos-title"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 id="permisos-title" class="font-medium">Permisos del rol</h2>
+            <p class="mt-1 text-sm opacity-60">
+              {{
+                id()
+                  ? 'Selecciona las operaciones que podrán realizar sus usuarios.'
+                  : 'Selecciona los permisos que tendrá el nuevo rol. Puedes crear un rol sin permisos.'
+              }}
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="badge badge-outline">{{ selected().length }} seleccionados</span>
+            @if (!id() && selected().length) {
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs"
+                [disabled]="crear.isPending()"
+                (click)="selected.set([]); error.set('')"
+              >
+                Limpiar selección
+              </button>
+            }
+          </div>
+        </div>
+        @if (!access.puede(permisos.ROLES.ASIGNAR_PERMISOS) || rol.data()?.sistema) {
+          @if (!rol.data()?.sistema && !access.puede(permisos.ROLES.ASIGNAR_PERMISOS)) {
+            <p class="mt-4 text-xs opacity-60">
+              {{
+                id()
+                  ? 'Necesitas permiso para modificar los permisos de este rol.'
+                  : 'No tienes permiso para asignar permisos; puedes crear el rol sin permisos.'
+              }}
+            </p>
+          }
+          @if (id()) {
+            <div class="mt-5 flex flex-wrap gap-2">
+              @for (permiso of rol.data()?.permisos; track permiso.id) {
+                <span class="badge badge-outline">{{ permiso.nombre }}</span>
+              } @empty {
+                <span class="text-sm opacity-60">Este rol no tiene permisos.</span>
+              }
+            </div>
+          }
+        } @else if (!tieneCatalogo()) {
+          <p class="mt-5 text-sm opacity-70">
+            Necesitas permiso para consultar los catálogos de features o permisos.
+            @if (!id()) {
+              Puedes crear el rol sin permisos.
+            }
+          </p>
+        } @else if (catalogo.isPending()) {
+          <p class="mt-5 text-sm opacity-60" role="status">Cargando permisos...</p>
+        } @else if (catalogo.isError()) {
+          <p class="mt-5 text-sm" role="alert">
+            No se pudo cargar el catálogo.
+            <button type="button" class="btn btn-ghost btn-xs" (click)="catalogo.refetch()">
+              Reintentar
+            </button>
+          </p>
+        } @else {
+          <p class="mt-4 text-xs opacity-60">Solo puedes asignar permisos que tu cuenta posee.</p>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            @for (grupo of catalogo.data(); track grupo.id) {
+              <fieldset class="rounded-2xl border border-base-content/10 p-4">
+                <legend class="px-1 text-sm font-semibold capitalize">{{ grupo.nombre }}</legend>
+                <div class="space-y-3">
+                  @for (permiso of grupo.permisos; track permiso.id) {
+                    <label class="flex items-start gap-3 text-sm"
+                      ><input
+                        type="checkbox"
+                        class="checkbox checkbox-primary checkbox-sm mt-0.5"
+                        [checked]="selected().includes(permiso.id)"
+                        [disabled]="
+                          !posee(permiso.codigo) ||
+                          !puedeAdministrarActual() ||
+                          asignar.isPending() ||
+                          crear.isPending()
+                        "
+                        (change)="toggle(permiso.id, $any($event.target).checked)"
+                      /><span
+                        >{{ permiso.nombre
+                        }}<small class="block text-xs opacity-50"
+                          >{{ permiso.codigo }}
+                          @if (!posee(permiso.codigo)) {
+                            · No disponible
+                          }
+                        </small></span
+                      ></label
+                    >
+                  }
+                </div>
+              </fieldset>
+            }
+          </div>
+          @if (id()) {
+            <button
+              type="button"
+              class="btn btn-primary btn-sm mt-5"
+              [disabled]="asignar.isPending() || !puedeAdministrarActual()"
+              (click)="guardarPermisos()"
+            >
+              {{ asignar.isPending() ? 'Guardando...' : 'Guardar permisos' }}
+            </button>
+          }
+        }
+        @if (!id() && access.puede(permisos.ROLES.CREAR)) {
+          <div
+            class="mt-6 flex flex-col-reverse gap-3 border-t border-base-content/10 pt-5 sm:flex-row sm:justify-end"
+          >
+            <button
+              type="button"
+              class="btn bg-base-300"
+              [disabled]="crear.isPending()"
+              (click)="paso.set(1); error.set('')"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="
+                crear.isPending() ||
+                (access.puede(permisos.ROLES.ASIGNAR_PERMISOS) &&
+                  tieneCatalogo() &&
+                  !catalogo.isSuccess())
+              "
+              (click)="guardarDatos()"
+            >
+              {{ crear.isPending() ? 'Creando...' : 'Crear rol' }}
+            </button>
+          </div>
+        }
+      </section>
+    }
+    @if (error()) {
+      <p class="mt-4 text-sm text-error" role="alert">{{ error() }}</p>
+    }
+    @if (message()) {
+      <p class="mt-4 text-sm text-success" role="status">{{ message() }}</p>
+    }
+  }
+</main>

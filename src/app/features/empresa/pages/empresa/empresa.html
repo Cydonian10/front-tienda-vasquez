@@ -1,0 +1,206 @@
+<main class="empresa-page">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow"><span></span> Administración</p>
+      <h1>Empresa</h1>
+      <p class="subtitle">La información de tu negocio, en un solo lugar.</p>
+    </div>
+    <span class="heading-icon"><svg lucideBuilding2 [size]="24" aria-hidden="true"></svg></span>
+  </div>
+
+  @if (company.isPending()) {
+    <p role="status">Cargando información de la empresa...</p>
+  } @else if (company.isError()) {
+    <p role="alert">No se pudo cargar la información de la empresa.</p>
+    <button type="button" class="btn btn-sm" (click)="company.refetch()">Reintentar</button>
+  } @else {
+    <form class="company-card" (submit)="$event.preventDefault(); save()">
+      <div class="card-heading">
+        <div>
+          <h2>Datos de la empresa</h2>
+          <p>Actualiza la información comercial y fiscal de tu negocio.</p>
+        </div>
+        <span class="required-note"><span>*</span> Campos obligatorios</span>
+      </div>
+
+      <div class="card-body">
+        <section class="form-section" aria-labelledby="company-details">
+          <div class="section-heading">
+            <span class="section-icon"
+              ><svg lucideBuilding2 [size]="17" aria-hidden="true"></svg
+            ></span>
+            <div>
+              <h3 id="company-details">Información general</h3>
+              <p>Los datos que identifican a tu empresa.</p>
+            </div>
+          </div>
+          <div class="fields">
+            <app-text-field
+              class="full"
+              inputId="razonSocial"
+              name="razonSocial"
+              label="Razón social"
+              placeholder="Ej. Servicios Generales Jauja S.A.C."
+              [(value)]="form.razonSocial"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [maxLength]="200"
+              [required]="true"
+            />
+            <app-text-field
+              inputId="nombreComercial"
+              name="nombreComercial"
+              label="Nombre comercial"
+              placeholder="Ej. Servicios Generales Jauja"
+              [(value)]="form.nombreComercial"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [maxLength]="200"
+            />
+            <app-text-field
+              inputId="actividad"
+              name="actividad"
+              label="Actividad económica"
+              placeholder="Ej. Venta de artículos de ferretería"
+              [(value)]="form.actividad"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [maxLength]="200"
+            />
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="tax-details">
+          <div class="section-heading">
+            <span class="section-icon"
+              ><svg lucideFileText [size]="17" aria-hidden="true"></svg
+            ></span>
+            <div>
+              <h3 id="tax-details">Información fiscal</h3>
+              <p>Datos para identificar legalmente tu negocio.</p>
+            </div>
+          </div>
+          <div class="fields">
+            <app-select-field
+              inputId="tipoDocumento"
+              name="tipoDocumento"
+              label="Tipo de documento"
+              [options]="documentTypes"
+              [(value)]="form.tipoDocumento"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [required]="true"
+            />
+            <app-text-field
+              inputId="numeroDocumento"
+              name="numeroDocumento"
+              label="Número de documento"
+              inputMode="numeric"
+              placeholder="Ingresa el número de documento"
+              [(value)]="form.numeroDocumento"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [maxLength]="30"
+              [required]="true"
+            />
+            <app-select-field
+              inputId="tipoEmpresa"
+              name="tipoEmpresa"
+              label="Tipo de empresa"
+              [options]="companyTypes"
+              [(value)]="form.tipoEmpresa"
+              [disabled]="!editing() || saveMutation.isPending()"
+            />
+            <app-text-field
+              inputId="direccion"
+              name="direccion"
+              label="Dirección fiscal"
+              placeholder="Ingresa la dirección fiscal"
+              [(value)]="form.direccion"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [maxLength]="250"
+              [required]="true"
+            />
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="contact-details">
+          <div class="section-heading">
+            <span class="section-icon"
+              ><svg lucideMapPin [size]="17" aria-hidden="true"></svg
+            ></span>
+            <div>
+              <h3 id="contact-details">Contacto e identidad</h3>
+              <p>Cómo pueden reconocer y contactar a tu empresa.</p>
+            </div>
+          </div>
+          <div class="fields">
+            <app-text-field
+              inputId="telefono"
+              name="telefono"
+              label="Teléfono"
+              type="tel"
+              autocomplete="tel"
+              placeholder="Ej. 999 999 999"
+              [(value)]="form.telefono"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [maxLength]="30"
+            />
+            <app-text-field
+              inputId="correo"
+              name="correo"
+              label="Correo de contacto"
+              type="email"
+              autocomplete="email"
+              placeholder="Ej. contacto@empresa.com"
+              [(value)]="form.correo"
+              [disabled]="!editing() || saveMutation.isPending()"
+              [maxLength]="254"
+            />
+            @if (company.data()?.logoUrl; as logoUrl) {
+              <div class="full">
+                <img [src]="logoUrl" alt="Logo actual de la empresa" class="company-logo" />
+              </div>
+            }
+            @if (editing()) {
+              <app-file-field
+                class="full"
+                inputId="logo"
+                name="logo"
+                label="Logo de la empresa"
+                accept="image/png,image/jpeg,image/webp"
+                help="PNG, JPG o WebP. Máximo 500 KB."
+                [disabled]="saveMutation.isPending()"
+                (fileChange)="selectLogo($event)"
+              />
+            }
+          </div>
+        </section>
+      </div>
+      <div class="card-footer">
+        <div aria-live="polite">
+          @if (fileError() || error()) {
+            <p class="form-error" role="alert">{{ fileError() || error() }}</p>
+          } @else if (message()) {
+            <p role="status">{{ message() }}</p>
+          }
+        </div>
+        <div class="footer-actions">
+          @if (editing()) {
+            @if (company.data()) {
+              <button
+                type="button"
+                class="cancel-button"
+                [disabled]="saveMutation.isPending()"
+                (click)="cancel()"
+              >
+                Cancelar
+              </button>
+            }
+            <button type="submit" [disabled]="saveMutation.isPending()">
+              {{ saveMutation.isPending() ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
+          } @else if (access.puede(permisos.EMPRESA.EDITAR)) {
+            <button type="button" (click)="startEditing()">Editar información</button>
+          }
+        </div>
+      </div>
+    </form>
+  }
+  <p class="page-footer">Tienda Vasquez · Tu espacio, a tu manera</p>
+</main>

@@ -1,0 +1,72 @@
+@let t = ticket();
+        <article
+          class="mx-auto w-full max-w-[300px] rounded-lg bg-[#f7f6ef] p-5 text-[#252925] shadow-sm sm:p-6"
+          aria-label="Nota de venta"
+        >
+          <header class="text-center">
+            <h3 class="text-lg font-semibold">{{ t.empresa.nombre }}</h3>
+            @if (t.empresa.direccion) {
+              <p class="mt-1 text-xs text-[#676d67]">{{ t.empresa.direccion }}</p>
+            }
+            <p class="mt-2 text-[10px] uppercase text-[#676d67]">Nota de venta</p>
+            <p class="mt-1 break-all text-[10px] text-[#676d67]">{{ t.id }}</p>
+          </header>
+          <div class="my-4 space-y-1.5 border-y border-dashed border-[#aeb4ad] py-3 text-xs">
+            <p class="flex justify-between gap-4">
+              <span>Fecha</span
+              ><span class="text-right">{{ t.fecha | date: 'dd/MM/yyyy, h:mm a' : '-0500' }}</span>
+            </p>
+            <p class="flex justify-between gap-4">
+              <span>Cliente</span
+              ><span class="text-right">{{ t.cliente || 'Consumidor final' }}</span>
+            </p>
+          </div>
+          <div class="space-y-3 text-xs">
+            @for (d of t.detalles; track $index) {
+              <div>
+                <div class="flex justify-between gap-3">
+                  <span>{{ d.nombre }}</span
+                  ><strong class="whitespace-nowrap">S/ {{ d.importe }}</strong>
+                </div>
+                <p class="mt-1 text-[10px] text-[#676d67]">
+                  {{ d.cantidad | number: '1.0-4' }} {{ d.unidad }} × S/
+                  {{ d.precioUnitario | number: '1.2-2' }}
+                </p>
+              </div>
+            }
+          </div>
+          <div class="mt-4 space-y-2 border-y border-dashed border-[#aeb4ad] py-3 text-xs">
+            <p class="flex justify-between gap-4 text-sm font-semibold">
+              <span>TOTAL</span><span>S/ {{ t.total }}</span>
+            </p>
+            @if (t.pago; as pago) {
+              <p class="flex justify-between gap-4">
+                <span>Medio de pago</span><span class="capitalize">{{ pago.medio }}</span>
+              </p>
+              @if (pago.recibido !== null) {
+                <p class="flex justify-between gap-4">
+                  <span>Recibido</span><span>S/ {{ pago.recibido }}</span>
+                </p>
+                <p class="flex justify-between gap-4">
+                  <span>Vuelto</span><span>S/ {{ pago.vuelto }}</span>
+                </p>
+              }
+            } @else {
+              <p class="flex justify-between gap-4">
+                <span>Estado</span><span>Pendiente de pago</span>
+              </p>
+              <p class="flex justify-between gap-4">
+                <span>Saldo</span><span>S/ {{ t.total }}</span>
+              </p>
+              @if (t.vencimiento) {
+                <p class="flex justify-between gap-4">
+                  <span>Vencimiento</span><span>{{ t.vencimiento }}</span>
+                </p>
+              }
+            }
+          </div>
+          <p class="mt-4 text-center text-xs font-semibold">¡Gracias por tu compra!</p>
+          <p class="mt-3 text-center text-[10px] leading-4 text-[#676d67]">
+            Nota de venta. No es un comprobante de pago electrónico.
+          </p>
+        </article>

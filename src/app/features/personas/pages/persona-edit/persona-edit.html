@@ -1,0 +1,35 @@
+<app-persona-page-layout
+  title="Editar persona"
+  subtitle="Actualiza los datos de una persona de tu equipo."
+  cardLabel="Edición de persona"
+  [backLabel]="access.puede(permisos.PERSONAS.LEER) ? 'Volver a personas' : 'Volver al inicio'"
+  [backDisabled]="mutation.isPending()"
+  (back)="back()"
+>
+  @if (persona.data(); as value) {
+    <app-persona-form
+      [persona]="value"
+      [saving]="mutation.isPending()"
+      [allowSubmit]="access.puede(permisos.PERSONAS.LEER) && access.puede(permisos.PERSONAS.EDITAR)"
+      [serverError]="
+        access.puede(permisos.PERSONAS.LEER) && access.puede(permisos.PERSONAS.EDITAR)
+          ? error()
+          : 'No se pudo validar el permiso para editar personas.'
+      "
+      (submitted)="save($event)"
+      (cancelled)="back()"
+    />
+  } @else if (persona.isPending()) {
+    <div class="status" role="status"><p>Cargando persona...</p></div>
+  } @else {
+    <div class="status" role="alert">
+      <h2>{{ notFound() ? 'Persona no encontrada' : 'No se pudo cargar la persona' }}</h2>
+      <p>{{ notFound() ? 'La persona no existe o ya no está disponible.' : loadError() }}</p>
+      @if (!notFound()) {
+        <button class="btn btn-primary" type="button" (click)="persona.refetch()">
+          Reintentar
+        </button>
+      }
+    </div>
+  }
+</app-persona-page-layout>

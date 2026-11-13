@@ -1,0 +1,171 @@
+<app-dialog-shell
+  title="Información del usuario"
+  titleId="usuario-info-title"
+  description="Cuenta, persona vinculada y roles de acceso."
+  [closeDisabled]="asignar.isPending()"
+  (closed)="cerrar()"
+>
+  <div class="space-y-6 p-6">
+    <div class="flex items-center gap-4 rounded-2xl bg-base-300 p-4">
+      @if (usuario.persona?.fotoUrl; as foto) {
+        <img class="size-12 rounded-xl object-cover" [src]="foto" alt="" />
+      } @else {
+        <span
+          class="grid size-12 place-items-center rounded-xl bg-primary/20 text-lg font-semibold text-secondary"
+          >{{ usuario.nickname.slice(0, 1).toUpperCase() }}</span
+        >
+      }
+      <div>
+        <h3 class="font-medium">{{ usuario.nickname }}</h3>
+        <p class="text-sm opacity-60">{{ usuario.email }}</p>
+      </div>
+    </div>
+    <section aria-labelledby="persona-vinculada">
+      <h3 id="persona-vinculada" class="text-sm font-semibold">Persona vinculada</h3>
+      @if (usuario.persona; as resumen) {
+        <p class="mt-2 text-sm font-medium">{{ resumen.nombres }} {{ resumen.apellidos }}</p>
+        @if (access.puede(permisos.PERSONAS.LEER)) {
+          @if (persona.isPending()) {
+            <p class="mt-2 text-xs opacity-60" role="status">
+              Cargando información de la persona...
+            </p>
+          } @else if (persona.isError()) {
+            <p class="mt-2 text-xs" role="alert">
+              No se pudo cargar la persona.
+              <button class="btn btn-ghost btn-xs" type="button" (click)="persona.refetch()">
+                Reintentar
+              </button>
+            </p>
+          } @else if (persona.data(); as datos) {
+            <dl class="mt-3 grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <dt class="opacity-60">Documento</dt>
+                <dd>{{ datos.tipoDocumento }} · {{ datos.numeroDocumento }}</dd>
+              </div>
+              <div>
+                <dt class="opacity-60">Estado</dt>
+                <dd>{{ datos.estado }}</dd>
+              </div>
+              <div>
+                <dt class="opacity-60">Correo</dt>
+                <dd>{{ datos.correo || 'Sin correo' }}</dd>
+              </div>
+              <div>
+                <dt class="opacity-60">Teléfono</dt>
+                <dd>{{ datos.telefono || 'Sin teléfono' }}</dd>
+              </div>
+              <div>
+                <dt class="opacity-60">Fecha de nacimiento</dt>
+                <dd>{{ datos.fechaNacimiento || 'Sin fecha' }}</dd>
+              </div>
+              <div>
+                <dt class="opacity-60">Dirección</dt>
+                <dd>{{ datos.direccion || 'Sin dirección' }}</dd>
+              </div>
+            </dl>
+          }
+        } @else {
+          <p class="mt-1 text-xs opacity-60">
+            Los detalles requieren permiso de lectura de personas.
+          </p>
+        }
+      } @else {
+        <p class="mt-2 text-sm opacity-60">Esta cuenta aún no tiene una persona vinculada.</p>
+      }
+    </section>
+    <section aria-labelledby="roles-usuario">
+      <h3 id="roles-usuario" class="text-sm font-semibold">Roles asignados</h3>
+      @if (roles.isPending()) {
+        <p class="mt-2 text-sm opacity-60" role="status">Cargando roles...</p>
+      } @else if (roles.isError()) {
+        <div role="alert" class="mt-2 text-sm">
+          No se pudieron cargar los roles.
+          <button class="btn btn-ghost btn-xs" type="button" (click)="roles.refetch()">
+            Reintentar
+          </button>
+        </div>
+      } @else {
+        <div class="mt-2 flex flex-wrap gap-2">
+          @for (rol of roles.data(); track rol.id) {
+            <span class="badge badge-outline"
+              >{{ rol.nombre }}{{ rol.activo ? '' : ' · Inactivo' }}</span
+            >
+          } @empty {
+            <span class="text-sm opacity-60">Sin roles asignados.</span>
+          }
+        </div>
+      }
+    </section>
+    @if (access.puede(permisos.USUARIOS.ASIGNAR_ROLES) && roles.isSuccess()) {
+      <section class="border-t border-base-content/10 pt-5" aria-labelledby="asignar-roles">
+        <h3 id="asignar-roles" class="text-sm font-semibold">Gestionar roles</h3>
+        <p class="mt-1 text-xs opacity-60">Solo puedes administrar roles cuyos permisos posees.</p>
+        @if (!access.puede(permisos.ROLES.LEER)) {
+          <p class="mt-3 text-sm opacity-70">
+            Necesitas permiso para consultar el catálogo de roles.
+          </p>
+        } @else if (catalogo.isPending()) {
+          <p class="mt-3 text-sm" role="status">Cargando catálogo...</p>
+        } @else if (catalogo.isError()) {
+          <p class="mt-3 text-sm" role="alert">
+            No se pudieron cargar los roles.
+            <button class="btn btn-ghost btn-xs" type="button" (click)="catalogo.refetch()">
+              Reintentar
+            </button>
+          </p>
+        } @else {
+          @if (!puedeAdministrarActuales()) {
+            <p class="mt-3 text-sm text-warning" role="status">
+              Esta cuenta tiene roles que superan tus permisos; no puedes modificarlos.
+            </p>
+          }
+          <div class="mt-3 max-h-52 space-y-2 overflow-auto">
+            @for (rol of catalogo.data(); track rol.id) {
+              <label
+                class="flex items-center justify-between gap-3 rounded-xl border border-base-content/10 p-3 text-sm"
+                ><span
+                  >{{ rol.nombre }}
+                  @if (!rol.activo) {
+                    <small class="opacity-60">· Inactivo</small>
+                  }
+                  @if (!puedeAdministrar(rol)) {
+                    <small class="opacity-60">· Permisos superiores</small>
+                  }</span
+                ><input
+                  class="checkbox checkbox-primary checkbox-sm"
+                  type="checkbox"
+                  [checked]="selected().includes(rol.id)"
+                  [disabled]="
+                    asignar.isPending() ||
+                    !puedeAdministrarActuales() ||
+                    !puedeAdministrar(rol) ||
+                    (!rol.activo && !selected().includes(rol.id))
+                  "
+                  (change)="toggle(rol.id, $any($event.target).checked)"
+              /></label>
+            } @empty {
+              <p class="text-sm opacity-60">No hay roles disponibles.</p>
+            }
+          </div>
+          <p class="mt-2 text-xs opacity-60">
+            Los roles inactivos seleccionados deben retirarse antes de guardar.
+          </p>
+          <button
+            class="btn btn-primary btn-sm mt-4"
+            type="button"
+            [disabled]="asignar.isPending() || !puedeAdministrarActuales() || tieneInactivos()"
+            (click)="guardar()"
+          >
+            {{ asignar.isPending() ? 'Guardando...' : 'Guardar roles' }}
+          </button>
+        }
+      </section>
+    }
+    @if (error()) {
+      <p class="text-sm text-error" role="alert">{{ error() }}</p>
+    }
+    @if (message()) {
+      <p class="text-sm text-success" role="status">{{ message() }}</p>
+    }
+  </div>
+</app-dialog-shell>

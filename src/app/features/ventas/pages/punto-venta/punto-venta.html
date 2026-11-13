@@ -1,0 +1,508 @@
+<main class="mx-auto max-w-[1500px] px-[1.1rem] pb-8 pt-8 sm:px-11 sm:pt-12">
+  <header class="mb-7 border-b border-base-content/10 pb-6">
+    <p
+      class="mb-2 flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-secondary"
+    >
+      <span class="size-[7px] rounded-full bg-secondary" aria-hidden="true"></span> Tu espacio de
+      trabajo
+    </p>
+    <h1 class="text-3xl font-medium tracking-tight sm:text-[2.35rem]">Punto de venta</h1>
+    <p class="mt-2 text-sm text-base-content/60">Selecciona productos y registra una venta.</p>
+  </header>
+  @if (mensaje()) {
+    <p role="status" class="mb-5 rounded-xl border border-secondary/20 bg-secondary/10 p-4 text-sm">
+      {{ mensaje() }}
+    </p>
+  }
+  <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <section
+      class="min-w-0 rounded-[20px] border border-base-content/10 bg-base-200 p-5 shadow-[0_14px_35px_rgba(0,0,0,0.05)] sm:p-7"
+      aria-labelledby="catalogo-title"
+    >
+      <p class="text-[0.67rem] font-semibold uppercase tracking-[0.12em] text-secondary">
+        Catálogo rápido
+      </p>
+      <h2 id="catalogo-title" class="mt-2 text-lg font-medium">Elige los productos</h2>
+      <p class="mt-1 text-sm text-base-content/55">
+        Selecciona un producto para agregarlo a la venta.
+      </p>
+      <div class="mt-5">
+        <app-text-field
+          inputId="venta-busqueda"
+          label="Buscar producto"
+          placeholder="Buscar por nombre..."
+          [value]="nombre()"
+          (valueChange)="buscarProducto($event)"
+          [disabled]="guardar.isPending()"
+        />
+      </div>
+      @if (access.puede(permisos.CATEGORIAS.LEER)) {
+        <nav aria-label="Filtrar productos por categoría" class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="btn btn-sm rounded-lg border border-base-content/10 text-xs font-medium"
+            [class.btn-primary]="!categoria()"
+            [class.bg-base-300]="!!categoria()"
+            [attr.aria-pressed]="!categoria()"
+            [disabled]="guardar.isPending()"
+            (click)="seleccionarCategoria('')"
+          >
+            Todos
+          </button>
+          @for (c of categorias.data(); track c.id) {
+            <button
+              type="button"
+              class="btn btn-sm rounded-lg border border-base-content/10 text-xs font-medium"
+              [class.btn-primary]="categoria() === c.id"
+              [class.bg-base-300]="categoria() !== c.id"
+              [attr.aria-pressed]="categoria() === c.id"
+              [disabled]="guardar.isPending()"
+              (click)="seleccionarCategoria(c.id)"
+            >
+              {{ c.nombre }}
+            </button>
+          }
+        </nav>
+        @if (categorias.isPending()) {
+          <p role="status" class="mt-2 text-xs text-base-content/50">Cargando categorías…</p>
+        }
+        @if (categorias.isError()) {
+          <p role="alert" class="mt-2 text-xs text-error">
+            No se pudieron cargar las categorías.
+            <button type="button" class="underline" (click)="categorias.refetch()">
+              Reintentar
+            </button>
+          </p>
+        }
+      }
+      @if (productos.isPending()) {
+        <p role="status" class="py-8 text-center text-sm text-base-content/60">
+          Cargando productos…
+        </p>
+      }
+      @if (productos.isError()) {
+        <div role="alert" class="mt-4 rounded-xl bg-error/10 p-4 text-sm text-error">
+          No se pudieron cargar los productos.
+          <button class="btn btn-link btn-sm" (click)="productos.refetch()">Reintentar</button>
+        </div>
+      }
+      @if (unidades.isError()) {
+        <div role="alert" class="mt-4 rounded-xl bg-error/10 p-4 text-sm text-error">
+          No se pudieron cargar las unidades.
+          <button class="btn btn-link btn-sm" (click)="unidades.refetch()">Reintentar</button>
+        </div>
+      }
+      @if (productos.data(); as result) {
+        <div class="mt-5 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+          @for (p of result.items; track p.id) {
+            <button
+              type="button"
+              class="group overflow-hidden rounded-xl border border-base-content/10 bg-base-300 text-left transition hover:border-secondary/40 focus-visible:outline-2 focus-visible:outline-secondary disabled:opacity-50"
+              (click)="agregar(p.id)"
+              [disabled]="
+                guardar.isPending() ||
+                !!seleccionado() ||
+                unidades.isPending() ||
+                unidades.isError()
+              "
+              [attr.aria-label]="'Agregar ' + p.nombre"
+            >
+              <span
+                class="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-base-100 text-secondary"
+              >
+                @if (p.imagen && !imagenesFallidas().has(p.id)) {
+                  <img
+                    class="absolute inset-0 h-full w-full object-contain p-3"
+                    [src]="p.imagen"
+                    alt=""
+                    (error)="imagenFallida(p.id)"
+                  />
+                } @else {
+                  <svg lucideBox [size]="26" aria-hidden="true"></svg>
+                }
+                <span
+                  class="absolute bottom-2 right-2 grid size-7 place-items-center rounded-lg bg-primary text-primary-content"
+                  ><svg lucidePlus [size]="16" aria-hidden="true"></svg></span
+              ></span>
+              <span class="block p-3"
+                ><span
+                  class="block truncate text-[0.65rem] uppercase tracking-wider text-base-content/50"
+                  >{{ p.marca }}</span
+                ><strong class="mt-1 block min-h-10 text-sm font-medium">{{ p.nombre }}</strong
+                ><span class="mt-2 block text-sm font-semibold text-secondary"
+                  >S/ {{ p.precio }}</span
+                ><span class="mt-1 block text-xs text-base-content/50"
+                  >Stock: {{ p.stock }} {{ p.unidad }}</span
+                ></span
+              >
+            </button>
+          } @empty {
+            <p class="col-span-full py-8 text-center text-sm text-base-content/50">
+              No encontramos productos.
+            </p>
+          }
+        </div>
+        <div class="mt-5 border-t border-base-content/10 pt-4">
+          <app-pagination
+            [total]="result.total"
+            [page]="page()"
+            [pageSize]="12"
+            (pageChange)="page.set($event)"
+          />
+        </div>
+      }
+      @if (seleccionado()) {
+        <p role="status" class="mt-4 text-sm text-base-content/60">Agregando producto…</p>
+      }
+    </section>
+    <aside
+      class="overflow-hidden rounded-[20px] border border-base-content/10 bg-base-200 shadow-[0_14px_35px_rgba(0,0,0,0.05)] xl:sticky xl:top-6"
+      aria-labelledby="venta-title"
+    >
+      <div class="border-b border-base-content/10 p-5">
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-[0.67rem] font-semibold uppercase tracking-[0.12em] text-secondary">
+            Detalle de venta
+          </p>
+          <span class="rounded-full bg-base-300 px-3 py-1 text-xs text-base-content/60"
+            >{{ lineas().length }} artículos</span
+          >
+        </div>
+        <h2 id="venta-title" class="mt-2 text-lg font-medium">Venta actual</h2>
+        <p class="mt-1 text-xs text-base-content/55">Revisa los artículos antes de cobrar.</p>
+      </div>
+      <fieldset [disabled]="guardar.isPending()" class="min-w-0">
+        @if (!lineas().length) {
+          <div class="grid min-h-52 place-content-center justify-items-center px-6 text-center">
+            <span
+              class="mb-4 grid size-12 place-items-center rounded-2xl bg-primary/10 text-secondary"
+              ><svg lucideShoppingCart [size]="22" aria-hidden="true"></svg
+            ></span>
+            <p class="text-sm font-medium">Tu venta está vacía</p>
+            <p class="mt-2 text-xs leading-5 text-base-content/50">
+              Agrega productos del catálogo para comenzar.
+            </p>
+          </div>
+        } @else {
+          <div class="max-h-[440px] space-y-3 overflow-y-auto p-5">
+            @for (l of lineas(); track $index; let i = $index) {
+              <article class="rounded-xl border border-base-content/10 bg-base-300/50 p-3">
+                <div class="flex items-start justify-between gap-2">
+                  <strong class="text-sm font-medium">{{ l.producto.nombre }}</strong
+                  ><button
+                    class="btn btn-ghost btn-xs text-error"
+                    (click)="quitar(i)"
+                    [attr.aria-label]="'Quitar ' + l.producto.nombre"
+                  >
+                    <svg lucideTrash2 [size]="16" aria-hidden="true"></svg>
+                  </button>
+                </div>
+                <div class="grid grid-cols-[minmax(0,1fr)_90px] gap-2">
+                  <app-select-field
+                    [inputId]="'unidad-' + i"
+                    label="Presentación"
+                    [options]="opcionesUnidades(l.producto)"
+                    [value]="l.unidadId"
+                    (valueChange)="actualizar(i, 'unidadId', $event)"
+                    [disabled]="guardar.isPending()"
+                  /><app-text-field
+                    [inputId]="'cantidad-' + i"
+                    label="Cantidad"
+                    inputMode="decimal"
+                    [value]="l.cantidad"
+                    (valueChange)="actualizar(i, 'cantidad', $event)"
+                    [disabled]="guardar.isPending()"
+                  />
+                </div>
+                <div class="mt-2 flex justify-between gap-3 text-xs text-base-content/60">
+                  <span>Precio por presentación</span
+                  ><span>S/ {{ precioUnidad(l).toFixed(2) }}</span>
+                </div>
+                <div class="mt-1 flex justify-between gap-3 text-sm font-medium">
+                  <span>Subtotal</span
+                  ><span class="text-secondary">S/ {{ importe(l).toFixed(2) }}</span>
+                </div>
+              </article>
+            }
+          </div>
+        }
+        <div class="border-t border-base-content/10 p-5">
+          <div class="mb-4 flex justify-between text-sm">
+            <span class="text-base-content/55">Total a cobrar</span
+            ><strong class="text-xl font-semibold text-secondary"
+              >S/ {{ total().toFixed(2) }}</strong
+            >
+          </div>
+          <button
+            class="btn btn-primary w-full rounded-xl"
+            [disabled]="!lineas().length || guardar.isPending() || !!seleccionado()"
+            (click)="abrirCobro()"
+          >
+            Continuar al cobro →
+          </button>
+        </div>
+      </fieldset>
+    </aside>
+  </div>
+</main>
+
+<ng-template #cobroDialog>
+  <app-dialog-shell
+    title="Registrar cobro"
+    titleId="cobro-venta-title"
+    eyebrow=""
+    description=""
+    width="min(480px, calc(100vw - 2rem))"
+    [closeDisabled]="guardar.isPending()"
+    (closed)="cerrarCobro()"
+  >
+    <div class="space-y-4 p-5 sm:px-6 sm:py-5">
+      <div
+        class="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/10 px-4 py-4"
+      >
+        <span class="text-sm text-base-content/65">Total a cobrar</span
+        ><strong class="text-2xl font-semibold text-secondary">S/ {{ total().toFixed(2) }}</strong>
+      </div>
+      @if (mensaje()) {
+        <p role="alert" class="rounded-xl bg-error/10 p-3 text-sm text-error">{{ mensaje() }}</p>
+      }
+      <fieldset [disabled]="guardar.isPending()" class="space-y-1.5">
+        <legend class="text-sm font-medium">Modalidad</legend>
+        <div class="grid grid-cols-2 gap-2">
+          @for (opcion of modalidades; track opcion.value) {
+            <label
+              class="cursor-pointer rounded-lg border px-3 py-2 text-center text-sm transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-secondary"
+              [class.border-secondary]="modalidad === opcion.value"
+              [class.bg-primary/10]="modalidad === opcion.value"
+              [class.border-base-content/15]="modalidad !== opcion.value"
+              [class.bg-base-300]="modalidad !== opcion.value"
+              ><input
+                type="radio"
+                name="modalidad-cobro"
+                class="sr-only"
+                [value]="opcion.value"
+                [checked]="modalidad === opcion.value"
+                (change)="elegirModalidad(opcion.value)"
+              />{{ opcion.label }}</label
+            >
+          }
+        </div>
+      </fieldset>
+      <div class="space-y-1.5">
+        <p class="text-sm font-medium">
+          Cliente
+          <span class="font-normal text-base-content/50">{{
+            modalidad === 'fiado' ? '(obligatorio)' : '(opcional)'
+          }}</span>
+        </p>
+        @if (access.puede(permisos.PERSONAS.LEER)) {
+          <div
+            class="flex items-center justify-between gap-2 rounded-lg border border-base-content/10 bg-base-300 px-3 py-2.5 text-sm"
+          >
+            <span class="min-w-0 truncate">{{
+              cliente() ? cliente()?.nombres + ' ' + cliente()?.apellidos : 'Consumidor final'
+            }}</span
+            ><button
+              type="button"
+              class="shrink-0 text-xs font-medium text-secondary hover:underline disabled:opacity-50"
+              [disabled]="guardar.isPending()"
+              (click)="buscandoCliente.set(!buscandoCliente())"
+            >
+              {{ buscandoCliente() ? 'Cerrar' : 'Buscar' }}
+            </button>
+          </div>
+          @if (cliente()) {
+            <button
+              type="button"
+              class="text-xs text-base-content/60 underline disabled:opacity-50"
+              [disabled]="guardar.isPending()"
+              (click)="cliente.set(null)"
+            >
+              Quitar cliente
+            </button>
+          }
+          @if (buscandoCliente()) {
+            <app-text-field
+              inputId="cliente-busqueda"
+              label="Buscar cliente"
+              placeholder="Nombre del cliente"
+              [value]="clienteNombre()"
+              (valueChange)="clienteNombre.set($event); clientePage.set(1)"
+              [disabled]="guardar.isPending()"
+            />
+            @if (personas.isPending()) {
+              <p role="status" class="text-xs text-base-content/50">Buscando clientes…</p>
+            }
+            @if (personas.isError()) {
+              <p role="alert" class="text-xs text-error">
+                No se pudieron cargar clientes.
+                <button type="button" class="underline" (click)="personas.refetch()">
+                  Reintentar
+                </button>
+              </p>
+            }
+            @if (personas.data(); as lista) {
+              <div class="max-h-32 overflow-y-auto rounded-lg border border-base-content/10">
+                @for (c of lista.items; track c.id) {
+                  <button
+                    type="button"
+                    class="block w-full px-3 py-2 text-left text-sm hover:bg-base-300 disabled:opacity-50"
+                    [disabled]="c.estado !== 'Activa' || guardar.isPending()"
+                    (click)="seleccionarCliente(c)"
+                  >
+                    {{ c.nombres }} {{ c.apellidos }}
+                    @if (c.estado !== 'Activa') {
+                      (inactivo)
+                    }
+                  </button>
+                } @empty {
+                  <p class="p-3 text-xs text-base-content/50">No se encontraron clientes.</p>
+                }
+              </div>
+              <app-pagination
+                [total]="lista.total"
+                [page]="clientePage()"
+                [pageSize]="10"
+                (pageChange)="clientePage.set($event)"
+              />
+            }
+          }
+        } @else {
+          <p
+            class="rounded-lg border border-base-content/10 bg-base-300 px-3 py-2.5 text-sm text-base-content/60"
+          >
+            Consumidor final
+          </p>
+          @if (modalidad === 'fiado') {
+            <p role="alert" class="text-xs text-error">
+              Necesitas permiso para consultar personas y seleccionar un cliente.
+            </p>
+          }
+        }
+      </div>
+      @if (modalidad === 'fiado') {
+        <app-text-field
+          inputId="vencimiento"
+          label="Vencimiento opcional"
+          type="date"
+          [(value)]="vencimiento"
+          [disabled]="guardar.isPending()"
+        />
+      } @else {
+        <fieldset [disabled]="guardar.isPending()" class="space-y-2">
+          <legend class="text-sm font-medium">Medio de pago</legend>
+          <div class="grid grid-cols-2 gap-2 min-[400px]:grid-cols-4">
+            @for (opcion of medios; track opcion.value) {
+              <label
+                class="cursor-pointer rounded-lg border px-2 py-2.5 text-center text-xs transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-secondary"
+                [class.border-secondary]="medio === opcion.value"
+                [class.bg-primary/10]="medio === opcion.value"
+                [class.text-secondary]="medio === opcion.value"
+                [class.border-base-content/15]="medio !== opcion.value"
+                [class.bg-base-300]="medio !== opcion.value"
+                ><input
+                  type="radio"
+                  name="medio-cobro"
+                  class="sr-only"
+                  [value]="opcion.value"
+                  [checked]="medio === opcion.value"
+                  (change)="elegirMedio(opcion.value)"
+                />{{ opcion.label }}</label
+              >
+            }
+          </div>
+        </fieldset>
+        @if (medio === 'efectivo') {
+          <app-text-field
+            inputId="recibido"
+            label="Monto recibido (S/)"
+            placeholder="0.00"
+            inputMode="decimal"
+            [(value)]="recibido"
+            [disabled]="guardar.isPending()"
+          />
+          @if (recibido) {
+            <p class="flex justify-between text-sm text-secondary">
+              <span>Vuelto estimado</span
+              ><span
+                >S/
+                {{ (Number(recibido) > total() ? Number(recibido) - total() : 0).toFixed(2) }}</span
+              >
+            </p>
+          } @else {
+            <p class="text-xs text-base-content/55">
+              Ingresa el monto recibido para calcular el vuelto.
+            </p>
+          }
+        }
+      }
+      <p class="text-xs text-base-content/50">
+        El total definitivo se calcula al registrar la venta.
+      </p>
+      <div class="flex flex-wrap justify-end gap-2 pt-2">
+        <button
+          type="button"
+          class="btn btn-ghost rounded-lg bg-base-300"
+          [disabled]="guardar.isPending()"
+          (click)="cerrarCobro()"
+        >
+          Volver al detalle</button
+        ><button
+          type="button"
+          class="btn btn-primary rounded-lg"
+          [disabled]="guardar.isPending()"
+          (click)="confirmar()"
+        >
+          {{
+            guardar.isPending()
+              ? 'Registrando…'
+              : modalidad === 'fiado'
+                ? 'Registrar fiado'
+                : 'Confirmar venta'
+          }}
+        </button>
+      </div>
+    </div>
+  </app-dialog-shell>
+</ng-template>
+
+<ng-template #ticketDialog>
+  <app-dialog-shell
+    title="Venta registrada"
+    titleId="ticket-venta-title"
+    eyebrow=""
+    description=""
+    width="min(480px, calc(100vw - 2rem))"
+    (closed)="cerrarTicket()"
+  >
+    <div class="p-5 sm:p-6">
+      @if (ticket.isPending()) {
+        <p role="status" class="p-5 text-center text-sm">Cargando ticket…</p>
+      }
+      @if (ticket.isError()) {
+        <p role="alert" class="rounded-xl bg-error/10 p-4 text-sm text-error">
+          No se pudo cargar el ticket. La venta ya fue registrada.
+          <button class="underline" (click)="ticket.refetch()">Reintentar</button>
+        </p>
+      }
+      @if (ticket.data(); as t) {
+        <app-ticket-contenido [ticket]="t" />
+      }
+      @if (ticketError()) {
+        <p role="alert" class="mt-4 rounded-lg bg-error/10 p-3 text-sm text-error">
+          {{ ticketError() }}
+        </p>
+      }
+      <div class="mt-5 flex flex-wrap justify-end gap-2">
+        <button class="btn btn-ghost rounded-lg bg-base-300" (click)="cerrarTicket()">Cerrar</button
+        ><button
+          class="btn btn-primary rounded-lg"
+          [disabled]="ticket.isPending() || ticket.isError() || imprimiendo()"
+          (click)="imprimirTicket()"
+        >
+          {{ imprimiendo() ? 'Generando PDF…' : 'Abrir PDF para imprimir' }}
+        </button>
+      </div>
+    </div>
+  </app-dialog-shell>
+</ng-template>

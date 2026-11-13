@@ -1,0 +1,145 @@
+<main class="personas-page">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow"><span></span> Administración</p>
+      <h1>Personas</h1>
+      <p class="subtitle">Organiza los datos de las personas que forman parte de tu negocio.</p>
+    </div>
+    <span class="heading-icon"><svg lucideUsers [size]="24" aria-hidden="true"></svg></span>
+  </div>
+
+  @if (message) {
+    <div class="notice" role="status">{{ message }}</div>
+  }
+
+  <section class="people-card" aria-labelledby="people-title">
+    <div class="card-heading">
+      <div class="card-heading-title">
+        <span class="card-icon"><svg lucideUsers [size]="19" aria-hidden="true"></svg></span>
+        <div>
+          <h2 id="people-title">Personas del equipo</h2>
+          <p>Gestiona la información de tu equipo en un solo lugar.</p>
+        </div>
+      </div>
+      @if (access.puede(permisos.PERSONAS.CREAR)) {
+        <a class="primary-button" routerLink="/admin/personas/nueva">
+          <svg lucidePlus [size]="17" aria-hidden="true"></svg> Nueva persona
+        </a>
+      }
+    </div>
+    <div class="toolbar">
+      <div class="list-label">
+        Listado de personas
+        @if (personas.data(); as result) {
+          <span>{{ result.total }}</span>
+        }
+      </div>
+      <label class="search"
+        ><svg lucideSearch [size]="16" aria-hidden="true"></svg
+        ><span class="sr-only">Buscar personas</span
+        ><input
+          type="search"
+          placeholder="Buscar por nombre..."
+          maxlength="200"
+          [value]="searchInput()"
+          (input)="updateSearch($event)"
+      /></label>
+    </div>
+    @if (personas.isPending()) {
+      <div class="empty" role="status"><p>Cargando personas...</p></div>
+    } @else if (personas.isError()) {
+      <div class="empty" role="alert">
+        <h3>No se pudo cargar el listado</h3>
+        <p>{{ listError() }}</p>
+        <button type="button" (click)="personas.refetch()">Reintentar</button>
+      </div>
+    } @else if (personas.data(); as result) {
+      <app-data-table label="Listado de personas, desplazar horizontalmente">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Persona</th>
+              <th scope="col">Documento</th>
+              <th scope="col">Contacto</th>
+              <th scope="col">Estado</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (persona of result.items; track persona.id) {
+              <tr>
+                <td>
+                  <div class="person-cell">
+                    @if (persona.fotoUrl) {
+                      <img class="avatar avatar-photo" [src]="persona.fotoUrl" alt="" />
+                    } @else {
+                      <span class="avatar">{{ initials(persona) }}</span>
+                    }
+                    <div>
+                      <strong>{{ persona.nombres }} {{ persona.apellidos }}</strong
+                      ><small>Persona del equipo</small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="cell-main">{{ persona.tipoDocumento }}</span
+                  ><small>{{ persona.numeroDocumento }}</small>
+                </td>
+                <td>
+                  <span class="cell-main">{{ persona.correo || 'Sin correo' }}</span
+                  ><small>{{ persona.telefono || 'Sin teléfono' }}</small>
+                </td>
+                <td>
+                  <span class="badge-status" [class.inactive]="persona.estado === 'Inactiva'"
+                    ><span></span>{{ persona.estado }}</span
+                  >
+                </td>
+                <td>
+                  @if (access.puede(permisos.PERSONAS.EDITAR)) {
+                    <a
+                      class="edit-button"
+                      [attr.aria-label]="'Editar a ' + persona.nombres + ' ' + persona.apellidos"
+                      [routerLink]="['/admin/personas', persona.id, 'editar']"
+                    >
+                      <svg lucidePencil [size]="15" aria-hidden="true"></svg><span>Editar</span>
+                    </a>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-data-table>
+      @if (!result.items.length) {
+        <div class="empty">
+          <span class="empty-icon"
+            ><svg lucideUserRoundPlus [size]="24" aria-hidden="true"></svg
+          ></span>
+          @if (search()) {
+            <h3>No encontramos personas</h3>
+            <p>Prueba con otro nombre o apellido.</p>
+          } @else {
+            <h3>Tu equipo empieza aquí</h3>
+            @if (access.puede(permisos.PERSONAS.CREAR)) {
+              <p>Agrega una persona para tener sus datos organizados.</p>
+              <a routerLink="/admin/personas/nueva">
+                Agregar primera persona <span aria-hidden="true">→</span>
+              </a>
+            } @else {
+              <p>Aún no hay personas registradas.</p>
+            }
+          }
+        </div>
+      }
+      <div class="card-footer">
+        <app-pagination
+          [total]="result.total"
+          [page]="page()"
+          [pageSize]="pageSize"
+          (pageChange)="page.set($event)"
+        />
+      </div>
+    }
+  </section>
+  <p class="page-footer">Tienda Vasquez · Tu espacio, a tu manera</p>
+</main>

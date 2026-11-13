@@ -1,0 +1,146 @@
+<main class="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-12">
+  <header class="mb-8 flex items-center justify-between gap-4">
+    <div>
+      <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-secondary">
+        Administración / Accesos
+      </p>
+      <h1 class="text-3xl font-medium tracking-tight">Usuarios</h1>
+      <p class="mt-2 text-sm opacity-60">
+        Administra las cuentas y su acceso a tu espacio de trabajo.
+      </p>
+    </div>
+    <span class="hidden rounded-2xl bg-primary/15 p-4 text-secondary sm:block"
+      ><svg lucideUsers [size]="24" aria-hidden="true"></svg
+    ></span>
+  </header>
+  @if (message) {
+    <p class="mb-5 rounded-2xl bg-success/10 p-4 text-sm text-success" role="status">
+      {{ message }}
+    </p>
+  }
+  <section
+    class="overflow-hidden rounded-3xl border border-base-content/10 bg-base-200 shadow-xl shadow-black/5"
+    aria-labelledby="usuarios-title"
+  >
+    <div
+      class="flex flex-col justify-between gap-4 border-b border-base-content/10 p-6 sm:flex-row sm:items-center"
+    >
+      <div class="flex items-center gap-3">
+        <span class="rounded-xl bg-primary/15 p-3 text-secondary"
+          ><svg lucideShield [size]="19" aria-hidden="true"></svg
+        ></span>
+        <div>
+          <h2 id="usuarios-title" class="font-medium">Cuentas del equipo</h2>
+          <p class="mt-1 text-xs opacity-60">Consulta su información y roles asignados.</p>
+        </div>
+      </div>
+      @if (access.puede(permisos.USUARIOS.CREAR)) {
+        <a class="btn btn-primary btn-sm" routerLink="/admin/usuarios/nuevo"
+          ><svg lucidePlus [size]="16" aria-hidden="true"></svg> Nuevo usuario</a
+        >
+      }
+    </div>
+    <div class="flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-sm font-medium">
+        Listado de usuarios <span class="badge badge-sm ml-1">{{ filtrados().length }}</span>
+      </p>
+      <label class="input input-sm w-full bg-base-300 sm:w-72"
+        ><svg lucideSearch [size]="16" aria-hidden="true"></svg
+        ><span class="sr-only">Buscar usuarios</span
+        ><input
+          type="search"
+          placeholder="Buscar por nombre o correo..."
+          [value]="search()"
+          (input)="buscar($event)"
+      /></label>
+    </div>
+    @if (usuarios.isPending()) {
+      <p class="p-8 text-center text-sm opacity-60" role="status">Cargando usuarios...</p>
+    } @else if (usuarios.isError()) {
+      <div class="p-8 text-center" role="alert">
+        <p>No se pudo cargar el listado de usuarios.</p>
+        <button class="btn btn-ghost btn-sm mt-3" type="button" (click)="usuarios.refetch()">
+          Reintentar
+        </button>
+      </div>
+    } @else {
+      <app-data-table label="Listado de usuarios, desplazar horizontalmente">
+        <table class="table min-w-[660px] w-full">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Correo</th>
+              <th>Persona vinculada</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (usuario of visibles(); track usuario.id) {
+              <tr>
+                <td>
+                  <div class="flex items-center gap-3">
+                    @if (usuario.persona?.fotoUrl; as foto) {
+                      <img class="size-10 rounded-xl object-cover" [src]="foto" alt="" />
+                    } @else {
+                      <span
+                        class="grid size-10 place-items-center rounded-xl bg-primary/15 font-semibold text-secondary"
+                        >{{ usuario.nickname.slice(0, 1).toUpperCase() }}</span
+                      >
+                    }
+                    <span class="font-medium">{{ usuario.nickname }}</span>
+                  </div>
+                </td>
+                <td>{{ usuario.email }}</td>
+                <td>
+                  @if (usuario.persona; as persona) {
+                    {{ persona.nombres }} {{ persona.apellidos }}
+                  } @else {
+                    <span class="opacity-50">Sin vincular</span>
+                  }
+                </td>
+                <td>
+                  <div class="flex justify-end gap-2">
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      type="button"
+                      (click)="informacion(usuario)"
+                      [attr.aria-label]="'Información de ' + usuario.nickname"
+                    >
+                      Información
+                    </button>
+                    @if (access.puede(permisos.USUARIOS.EDITAR)) {
+                      <a
+                        class="btn btn-sm"
+                        [routerLink]="['/admin/usuarios', usuario.id, 'editar']"
+                        [attr.aria-label]="'Editar usuario ' + usuario.nickname"
+                        >Editar</a
+                      >
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-data-table>
+      @if (!filtrados().length) {
+        <div class="p-10 text-center">
+          <p class="font-medium">
+            {{ search() ? 'No encontramos usuarios' : 'Aún no hay usuarios registrados' }}
+          </p>
+          <p class="mt-1 text-sm opacity-60">
+            {{ search() ? 'Prueba con otra búsqueda.' : 'Las cuentas creadas aparecerán aquí.' }}
+          </p>
+        </div>
+      }
+      <div class="border-t border-base-content/10 px-6 py-4">
+        <app-pagination
+          [total]="filtrados().length"
+          [page]="page()"
+          [pageSize]="pageSize"
+          (pageChange)="page.set($event)"
+        />
+      </div>
+    }
+  </section>
+</main>

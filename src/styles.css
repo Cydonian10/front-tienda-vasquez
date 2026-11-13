@@ -1,0 +1,154 @@
+@import 'tailwindcss';
+@import '@fontsource/fredoka/300.css';
+@import '@fontsource/fredoka/400.css';
+@import '@fontsource/fredoka/500.css';
+@import '@fontsource/fredoka/600.css';
+@import '@angular/cdk/overlay-prebuilt.css';
+
+@theme {
+  --font-sans: 'Fredoka', sans-serif;
+  --font-fredoka: 'Fredoka', sans-serif;
+}
+
+@plugin "daisyui" {
+  themes: false;
+}
+
+@plugin "daisyui/theme" {
+  name: 'vasquez-light';
+  color-scheme: light;
+
+  --color-base-100: #f2f2f4;
+  --color-base-200: #ffffff;
+  --color-base-300: #f3f3f5;
+  --color-base-content: #202127;
+  --color-primary: #5159dc;
+  --color-primary-content: #ffffff;
+  --color-secondary: #626ae8;
+  --color-secondary-content: #ffffff;
+  --color-accent: #5159dc;
+  --color-accent-content: #ffffff;
+  --color-neutral: #e5e5e9;
+  --color-neutral-content: #202127;
+  --color-info: #2563a6;
+  --color-info-content: #ffffff;
+  --color-success: #16804a;
+  --color-success-content: #ffffff;
+  --color-warning: #aa6100;
+  --color-warning-content: #ffffff;
+  --color-error: #c93232;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 1rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1.5rem;
+}
+
+@plugin "daisyui/theme" {
+  name: 'vasquez-dark';
+  default: true;
+  color-scheme: dark;
+
+  --color-base-100: #08080a;
+  --color-base-200: #171719;
+  --color-base-300: #222224;
+  --color-base-content: #d4d4d8;
+  --color-primary: #4854c5;
+  --color-primary-content: #ffffff;
+  --color-secondary: #747fea;
+  --color-secondary-content: #ffffff;
+  --color-accent: #6272d9;
+  --color-accent-content: #ffffff;
+  --color-neutral: #27272a;
+  --color-neutral-content: #e4e4e7;
+  --color-info: #60a5fa;
+  --color-info-content: #08111f;
+  --color-success: #4ade80;
+  --color-success-content: #052e16;
+  --color-warning: #fbbf24;
+  --color-warning-content: #291b03;
+  --color-error: #c93232;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 1rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1.5rem;
+}
+
+/* Sin bordes permanentes, con una indicación suave al recibir foco. */
+.btn,
+.input,
+.input:focus-within {
+  border: none;
+  outline: none;
+}
+
+.input:focus,
+.input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.input {
+  transition: box-shadow 180ms ease;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Elevación discreta solo en el tema claro; el tema oscuro conserva su estilo. */
+.card {
+  box-shadow:
+    0 2px 4px rgb(25 27 44 / 5%),
+    0 12px 30px rgb(25 27 44 / 5%);
+}
+
+.input {
+  box-shadow: 0 1px 3px rgb(25 27 44 / 10%);
+}
+
+.input:focus,
+.input:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-primary),
+    0 2px 5px rgb(25 27 44 / 8%);
+}
+
+.btn:not(.btn-ghost) {
+  box-shadow: 0 2px 4px rgb(25 27 44 / 10%);
+}
+
+/* Un fondo ligeramente más oscuro para los campos en el tema claro. */
+[data-theme='vasquez-light'] .input {
+  background-color: #eaeaec;
+  --input-autofill-background: #eaeaec;
+}
+
+/* Conserva el autocompletado sin el fondo azul que aplica el navegador. */
+input.input:is(:-webkit-autofill, :autofill) {
+  -webkit-text-fill-color: var(--color-base-content);
+  box-shadow: 0 0 0 1000px var(--input-autofill-background, var(--color-base-300)) inset;
+}
+
+input.input:is(:-webkit-autofill, :autofill):focus {
+  box-shadow:
+    0 0 0 1000px var(--input-autofill-background, var(--color-base-300)) inset,
+    0 0 0 2px var(--color-primary);
+}
+
+/* El tema aporta variables al overlay, pero no debe pintar su contenedor de pantalla completa. */
+.cdk-overlay-container[data-theme] {
+  background-color: transparent;
+}
+
+.person-dialog-backdrop {
+  background: rgb(0 0 0 / 40%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+[data-theme='vasquez-light'] .person-dialog-backdrop {
+  background: rgb(30 32 48 / 25%);
+}

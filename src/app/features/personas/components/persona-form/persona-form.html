@@ -1,0 +1,99 @@
+<form (submit)="$event.preventDefault(); save()" novalidate>
+  <div class="form-body">
+    <div class="form-intro">
+      <span>Información personal</span><small><b>*</b> Campos obligatorios</small>
+    </div>
+    <fieldset class="fields" [disabled]="saving()">
+      <app-text-field
+        inputId="persona-nombres"
+        label="Nombres"
+        placeholder="Ej. Andrea"
+        autocomplete="given-name"
+        [formField]="personaForm.nombres"
+      />
+      <app-text-field
+        inputId="persona-apellidos"
+        label="Apellidos"
+        placeholder="Ej. García López"
+        autocomplete="family-name"
+        [formField]="personaForm.apellidos"
+      />
+      <app-select-field
+        inputId="persona-tipo"
+        label="Tipo de documento"
+        [options]="documentTypes"
+        [formField]="personaForm.tipoDocumento"
+      />
+      <app-text-field
+        inputId="persona-documento"
+        label="Número de documento"
+        placeholder="Ingresa el número"
+        [formField]="personaForm.numeroDocumento"
+      />
+      <app-text-field
+        inputId="persona-correo"
+        label="Correo personal"
+        type="email"
+        autocomplete="email"
+        placeholder="correo@ejemplo.com"
+        [formField]="personaForm.correo"
+      />
+      <app-text-field
+        inputId="persona-telefono"
+        label="Teléfono"
+        type="tel"
+        autocomplete="tel"
+        placeholder="Ej. 999 999 999"
+        [formField]="personaForm.telefono"
+      />
+      <app-text-field
+        inputId="persona-nacimiento"
+        label="Fecha de nacimiento"
+        type="date"
+        [formField]="personaForm.fechaNacimiento"
+      />
+      <app-select-field
+        inputId="persona-estado"
+        label="Estado"
+        [options]="states"
+        [formField]="personaForm.estado"
+      />
+      <app-text-field
+        class="full"
+        inputId="persona-direccion"
+        label="Dirección"
+        autocomplete="street-address"
+        placeholder="Ingresa una dirección"
+        [formField]="personaForm.direccion"
+      />
+      <app-file-field
+        class="full"
+        inputId="persona-foto"
+        name="foto"
+        label="Foto"
+        accept="image/png,image/jpeg,image/webp"
+        help="PNG, JPG o WebP. Máximo 500 KB. Al editar, deja el campo vacío para conservar la foto actual."
+        [disabled]="saving()"
+        (fileChange)="selectPhoto($event)"
+      />
+    </fieldset>
+    @if (foto) {
+      <p class="photo-note">Foto seleccionada: {{ foto.name }}</p>
+    } @else if (fotoUrl()) {
+      <p class="photo-note">Se conservará la foto actual si no seleccionas otra.</p>
+    }
+    @if (fileError() || formError() || serverError()) {
+      <p class="error" role="alert">{{ fileError() || formError() || serverError() }}</p>
+    }
+  </div>
+  <footer>
+    <span>La persona se registrará en tu empresa.</span>
+    <div>
+      <button class="secondary" type="button" [disabled]="saving()" (click)="close()">
+        Cancelar</button
+      ><button class="primary" type="submit" [disabled]="saving() || !allowSubmit()">
+        {{ saving() ? 'Guardando...' : editing() ? 'Guardar cambios' : 'Guardar persona' }}
+      </button>
+    </div>
+  </footer>
+</form>
