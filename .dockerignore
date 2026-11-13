@@ -1,0 +1,12 @@
+node_modules
+dist
+.angular
+.git
+.agents
+.codex
+.aws
+.vscode
+.env
+.env.*
+coverage
+npm-debug.log*

@@ -10,7 +10,7 @@ npm start
 ```
 
 Frontend: **http://localhost:4200**. Backend: **http://localhost:3000**.
-La URL de la API se configura en `src/environments/environment.ts`; usar HTTPS en producción.
+La URL de la API para desarrollo se configura en `src/environments/environment.ts`. Para producción se utiliza `src/environments/environment.production.ts`.
 
 ## Arquitectura
 
@@ -206,6 +206,17 @@ Las pruebas cubren sesión, login, callback de un solo uso, interceptor, rutas l
 El build puede emitir advertencias por los presupuestos de bundle inicial y CSS; no aumentar esos límites para ocultarlas.
 
 En producción, configurar el servidor para devolver `index.html` en rutas Angular como `/admin/personas` y `/auth/callback`, actualizar API/callbacks y mantener frontend/API en un mismo sitio para las cookies SameSite.
+
+### Docker en producción
+
+Antes de construir la imagen, editar `src/environments/environment.production.ts` y sustituir la URL de ejemplo por la URL pública de la API, incluida su ruta base. La imagen compila Angular y sirve los archivos estáticos con Nginx en el puerto 8080:
+
+```bash
+docker build -t tienda-vasquez-frontend .
+docker run -d --name tienda-vasquez-frontend -p 8080:8080 tienda-vasquez-frontend
+```
+
+La URL se incorpora al JavaScript durante la compilación: debe ser accesible desde el navegador y no debe contener secretos. Cambiarla requiere reconstruir la imagen; pasar variables a `docker run` no modifica una imagen ya compilada. Usar HTTPS en producción y configurar en el backend el origen del frontend para CORS con credenciales y las URL públicas de callback de Google y del frontend. Nginx devuelve `index.html` para las rutas de Angular.
 
 Las convenciones para agentes y contribuciones están en [`AGENTS.md`](AGENTS.md).
 
