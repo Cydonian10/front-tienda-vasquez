@@ -1,3 +1,3 @@
 export const environment = {
-  apiUrl: 'https://test.vasquez.press/api/v1',
+  apiUrl: 'https://mecanica.vasquez.press/api/v1',
 };
