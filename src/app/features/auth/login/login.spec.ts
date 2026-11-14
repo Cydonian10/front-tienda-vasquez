@@ -92,6 +92,30 @@ describe('Login page', () => {
     expect(auth.startGoogleLogin).toHaveBeenCalledOnce();
   });
 
+  it('reenables login when returning from Google via the browser cache', () => {
+    const { element, fixture } = setup();
+    const googleButton = element.querySelector<HTMLButtonElement>('.google-button')!;
+    googleButton.click();
+    fixture.detectChanges();
+    expect(googleButton.disabled).toBe(true);
+
+    window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+    fixture.detectChanges();
+    expect(googleButton.disabled).toBe(false);
+    expect(element.querySelector<HTMLButtonElement>('[type="submit"]')!.disabled).toBe(false);
+    googleButton.click();
+    expect(auth.startGoogleLogin).toHaveBeenCalledTimes(2);
+  });
+
+  it('reenables login if the Google redirect fails', () => {
+    auth.startGoogleLogin.mockImplementation(() => { throw new Error('redirect failed'); });
+    const { element, fixture } = setup();
+    element.querySelector<HTMLButtonElement>('.google-button')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector<HTMLButtonElement>('.google-button')!.disabled).toBe(false);
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain('Google');
+  });
+
   it('toggles password visibility', () => {
     const { element, fixture } = setup();
     expect(element.querySelector<HTMLInputElement>('#password')?.type).toBe('password');

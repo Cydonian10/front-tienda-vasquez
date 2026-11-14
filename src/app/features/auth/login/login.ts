@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { email, form, FormField, maxLength, required } from '@angular/forms/signals';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -30,6 +30,15 @@ export class LoginPage {
   });
   protected readonly loading = signal(false);
   protected readonly error = signal('');
+  private googleRedirectPending = false;
+
+  @HostListener('window:pageshow', ['$event'])
+  protected onPageShow(event: PageTransitionEvent): void {
+    if (event.persisted && this.googleRedirectPending) {
+      this.googleRedirectPending = false;
+      this.loading.set(false);
+    }
+  }
 
   protected submit(event: Event): void {
     event.preventDefault();
@@ -67,6 +76,13 @@ export class LoginPage {
   protected googleLogin(): void {
     if (this.loading()) return;
     this.loading.set(true);
-    this.auth.startGoogleLogin();
+    this.googleRedirectPending = true;
+    try {
+      this.auth.startGoogleLogin();
+    } catch {
+      this.googleRedirectPending = false;
+      this.loading.set(false);
+      this.error.set('No pudimos conectar con Google. Intentá nuevamente.');
+    }
   }
 }
