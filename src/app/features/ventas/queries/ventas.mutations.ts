@@ -23,6 +23,7 @@ export class VentasMutations {
           this.client.invalidateQueries({ queryKey: ventasKeys.productos }),
           this.client.invalidateQueries({ queryKey: ventasKeys.producto }),
           this.client.invalidateQueries({ queryKey: ['productos'] }),
+          this.client.invalidateQueries({ queryKey: ['inicio', 'bajo-stock'] }),
         ]);
       },
     });

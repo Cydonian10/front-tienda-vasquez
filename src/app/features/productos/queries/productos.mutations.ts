@@ -18,7 +18,11 @@ export class ProductosMutations {
         if (version !== this.auth.sessionVersion) return;
         await this.client.invalidateQueries({ queryKey: ['productos', 'detalle', id] });
         if (version === this.auth.sessionVersion)
-          await this.client.invalidateQueries({ queryKey: ['productos', 'lista'] });
+          await Promise.all([
+            this.client.invalidateQueries({ queryKey: ['productos', 'lista'] }),
+            this.client.invalidateQueries({ queryKey: ['inicio', 'productos'] }),
+            this.client.invalidateQueries({ queryKey: ['inicio', 'bajo-stock'] }),
+          ]);
       },
     });
   }
@@ -29,7 +33,11 @@ export class ProductosMutations {
       mutationFn: (data: FormData) => firstValueFrom(this.api.crear(data)),
       onSuccess: async (_, __, version) => {
         if (version === this.auth.sessionVersion)
-          await this.client.invalidateQueries({ queryKey: ['productos', 'lista'] });
+          await Promise.all([
+            this.client.invalidateQueries({ queryKey: ['productos', 'lista'] }),
+            this.client.invalidateQueries({ queryKey: ['inicio', 'productos'] }),
+            this.client.invalidateQueries({ queryKey: ['inicio', 'bajo-stock'] }),
+          ]);
       },
     });
   }

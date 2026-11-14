@@ -1,3 +1,4 @@
+import { VentasChart, VentaDia } from './ventas-chart';
 import { Component, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -18,6 +19,7 @@ import { environment } from '../../../environments/environment';
   selector: 'app-dashboard',
   imports: [
     RouterLink,
+    VentasChart,
     LucideBarChart3,
     LucideShoppingCart,
     LucideBox,
@@ -58,6 +60,17 @@ export class Dashboard {
         signal,
       ),
   }));
+  protected readonly semana = injectQuery(() => ({
+    queryKey: ['inicio', 'ventas', 'semana'], enabled: this.access.puede(PERMISOS.VENTAS.LEER),
+    queryFn: ({ signal }) => httpQuery(this.http.get<VentaDia[]>(`${environment.apiUrl}/inicio/ventas-semana`), signal),
+  }));
+  protected readonly bajoStock = injectQuery(() => ({
+    queryKey: ['inicio', 'bajo-stock'], enabled: this.access.puede(PERMISOS.PRODUCTOS.LEER),
+    queryFn: ({ signal }) => httpQuery(this.http.get<{id: string; nombre: string; stock: string; stockMinimo: string; unidad: string}[]>(`${environment.apiUrl}/inicio/bajo-stock`), signal),
+  }));
+  protected get totalSemana() {
+    return (this.semana.data() ?? []).reduce((total, dia) => total + Number(dia.total), 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
   protected get importe() {
     return Number(this.ventas.data()?.total ?? 0).toLocaleString('es-PE', {
       minimumFractionDigits: 2,

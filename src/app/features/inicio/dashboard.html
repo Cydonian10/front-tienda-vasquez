@@ -86,4 +86,66 @@
       }
     }
   </section>
+  <div class="dashboard-panels">
+    @if (access.puede(p.VENTAS.LEER)) {
+      <section class="panel" aria-labelledby="semana-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="semana-title">Ventas de la semana</h2>
+            <p>Suma de los últimos 7 días, incluido hoy.</p>
+          </div>
+          <span class="badge-period">Últimos 7 días</span>
+        </div>
+        @if (semana.isPending()) {
+          <p class="panel-state" role="status">Cargando ventas…</p>
+        } @else if (semana.isError()) {
+          <p class="panel-state" role="alert">
+            No se pudo cargar el gráfico. <button (click)="semana.refetch()">Reintentar</button>
+          </p>
+        } @else {
+          <p class="week-total flex gap-3 items-center">
+            <strong>S/ {{ totalSemana }}</strong>
+            <span>vendido en el periodo</span>
+          </p>
+          <app-ventas-chart [datos]="semana.data() ?? []" />
+          <p class="hint">Pasa el cursor sobre una columna para consultar su importe.</p>
+        }
+      </section>
+    }
+    @if (access.puede(p.PRODUCTOS.LEER)) {
+      <section class="panel" aria-labelledby="stock-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="stock-title">Productos con bajo stock</h2>
+            <p>Stock igual o menor al mínimo configurado.</p>
+          </div>
+        </div>
+        @if (bajoStock.isPending()) {
+          <p class="panel-state" role="status">Cargando productos…</p>
+        } @else if (bajoStock.isError()) {
+          <p class="panel-state" role="alert">
+            No se pudo cargar el stock. <button (click)="bajoStock.refetch()">Reintentar</button>
+          </p>
+        } @else if (!bajoStock.data()?.length) {
+          <p class="panel-state">No hay productos con bajo stock.</p>
+        } @else {
+          <ul class="stock-list">
+            @for (producto of bajoStock.data(); track producto.id) {
+              <li>
+                <span class="icon icon-box"
+                  ><svg lucideBox [size]="18" aria-hidden="true"></svg
+                ></span>
+                <div class="stock-name">
+                  <strong>{{ producto.nombre }}</strong
+                  ><span>Mínimo: {{ producto.stockMinimo }} {{ producto.unidad }}</span>
+                </div>
+                <span class="stock-badge">{{ producto.stock }} {{ producto.unidad }}</span>
+              </li>
+            }
+          </ul>
+          <p class="hint">Se muestran hasta 10 productos que necesitan reposición.</p>
+        }
+      </section>
+    }
+  </div>
 </main>
