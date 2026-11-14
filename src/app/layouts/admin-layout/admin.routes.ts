@@ -1,16 +1,7 @@
 import { Routes } from '@angular/router';
 
-// Estas secciones aún son provisionales; no crear features vacías para ellas.
-const placeholders = [
-  ['', 'Inicio'],
-  ['movimientos', 'Movimientos'],
-  ['clientes', 'Clientes'],
-  ['reportes', 'Reportes'],
-  ['configuracion', 'Configuración'],
-  ['ayuda', 'Ayuda'],
-] as const;
-
 export const adminRoutes: Routes = [
+  { path: '', pathMatch: 'full', title: 'Inicio · Tienda Vasquez', loadComponent: () => import('@/features/inicio/dashboard').then(m => m.Dashboard) },
   {
     path: 'ventas',
     loadChildren: () => import('@/features/ventas/ventas.routes').then((m) => m.ventasRoutes),
@@ -50,11 +41,4 @@ export const adminRoutes: Routes = [
     path: 'roles-permisos',
     loadChildren: () => import('@/features/roles/roles.routes').then((m) => m.rolesRoutes),
   },
-  ...placeholders.map(([path, label]) => ({
-    path,
-    pathMatch: 'full' as const,
-    title: `${label} · Tienda Vasquez`,
-    data: { label },
-    loadComponent: () => import('@/features/inicio/admin').then((m) => m.AdminPage),
-  })),
 ];

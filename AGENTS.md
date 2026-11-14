@@ -76,7 +76,7 @@
 
 - `app.routes.ts` compone autenticación y layout privado; `admin.routes.ts` conecta features con lazy loading.
 - Conservar guards al navegar entre rutas hijas privadas y mantener las URLs existentes.
-- Las secciones provisionales usan `features/inicio/admin.ts`; reemplazarlas por features reales solo dentro del alcance pedido.
+- No agregar rutas provisionales para secciones que todavía no estén implementadas.
 - Usuarios vive en `/admin/usuarios` y roles en `/admin/roles-permisos`. Los permisos nuevos se mantienen sincronizados con el catálogo del backend; asignar roles o permisos no implica permisos de lectura de catálogos.
 - Marcas vive en `/admin/marcas`, con creación y edición en rutas hijas. El CRUD usa los permisos `marcas.*`; editar requiere también lectura y eliminar requiere confirmación.
 - Categorías vive en `/admin/categorias` con creación y edición en rutas hijas. El CRUD usa los permisos `categorias.*`; editar requiere también lectura y eliminar requiere confirmación.

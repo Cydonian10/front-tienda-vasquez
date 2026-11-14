@@ -19,6 +19,7 @@ export class VentasMutations {
         if (version !== this.auth.sessionVersion) return;
         await Promise.all([
           this.client.invalidateQueries({ queryKey: ventasKeys.listas }),
+          this.client.invalidateQueries({ queryKey: ['inicio', 'ventas'] }),
           this.client.invalidateQueries({ queryKey: ventasKeys.productos }),
           this.client.invalidateQueries({ queryKey: ventasKeys.producto }),
           this.client.invalidateQueries({ queryKey: ['productos'] }),

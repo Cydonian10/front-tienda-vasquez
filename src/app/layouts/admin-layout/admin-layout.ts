@@ -87,7 +87,6 @@ export class AdminLayout {
             { label: 'Nueva venta', path: '/admin/ventas/nueva', permiso: PERMISOS.VENTAS.CREAR },
           ],
         },
-        { label: 'Reportes', icon: 'chart', path: '/admin/reportes' },
       ],
     },
     {
@@ -117,13 +116,6 @@ export class AdminLayout {
             },
           ],
         },
-      ],
-    },
-    {
-      label: 'Preferencias',
-      items: [
-        { label: 'Configuración', icon: 'settings', path: '/admin/configuracion' },
-        { label: 'Ayuda', icon: 'help', path: '/admin/ayuda' },
       ],
     },
   ];

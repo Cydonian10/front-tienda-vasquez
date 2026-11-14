@@ -1,0 +1,89 @@
+<main class="workspace">
+  <header class="heading">
+    <div>
+      <p class="eyebrow"><span></span> Tu espacio de trabajo</p>
+      <h1>Hola, {{ nombre }}</h1>
+      <p class="subtitle">Así va tu negocio hoy. Todo lo importante, en un solo lugar.</p>
+    </div>
+    <p class="date"><svg lucideCalendarDays [size]="16" aria-hidden="true"></svg>{{ fecha }}</p>
+  </header>
+
+  <div class="section-heading">
+    <div>
+      <p class="section-label"><span></span> Resumen de tu negocio hoy</p>
+      <p class="section-caption">Un vistazo a la actividad de tu tienda</p>
+    </div>
+    @if (puedeCrear) {
+      <a class="new-sale" routerLink="/admin/ventas/nueva"
+        ><svg lucidePlus [size]="17" aria-hidden="true"></svg> Nueva venta</a
+      >
+    }
+  </div>
+
+  <section class="cards" aria-label="Resumen del negocio">
+    @if (access.perfil.isPending()) {
+      <p class="notice" role="status">Cargando tu espacio de trabajo…</p>
+    } @else if (access.perfil.isError()) {
+      <div class="notice" role="alert">
+        No se pudieron cargar tus permisos.
+        <button (click)="access.perfil.refetch()">Reintentar</button>
+      </div>
+    } @else {
+      @if (access.puede(p.VENTAS.LEER)) {
+        @if (ventas.isPending()) {
+          <p class="notice" role="status">Cargando ventas…</p>
+        } @else if (ventas.isError()) {
+          <div class="notice" role="alert">
+            No se pudo cargar el resumen de ventas.
+            <button (click)="ventas.refetch()">Reintentar</button>
+          </div>
+        } @else {
+          <article class="card">
+            <span class="icon icon-sales"
+              ><svg lucideBarChart3 [size]="20" aria-hidden="true"></svg
+            ></span>
+            <p class="card-label">Ventas de hoy</p>
+            <strong>S/ {{ importe }}</strong>
+            <p class="card-caption">Total registrado en el día</p>
+          </article>
+          <article class="card">
+            <span class="icon icon-cart"
+              ><svg lucideShoppingCart [size]="20" aria-hidden="true"></svg
+            ></span>
+            <p class="card-label">Ventas realizadas</p>
+            <strong>{{ ventas.data()?.ventas }}</strong>
+            <p class="card-caption">Ventas registradas hoy</p>
+          </article>
+          <article class="card">
+            <span class="icon icon-box"><svg lucideBox [size]="20" aria-hidden="true"></svg></span>
+            <p class="card-label">Productos vendidos</p>
+            <strong>{{ cantidad }}</strong>
+            <p class="card-caption">Cantidad en unidades base</p>
+          </article>
+        }
+      } @else {
+        <p class="notice">Resumen de ventas no disponible por permisos.</p>
+      }
+      @if (access.puede(p.PRODUCTOS.LEER)) {
+        @if (productos.isPending()) {
+          <p class="notice" role="status">Cargando catálogo…</p>
+        } @else if (productos.isError()) {
+          <div class="notice" role="alert">
+            No se pudo cargar el catálogo. <button (click)="productos.refetch()">Reintentar</button>
+          </div>
+        } @else {
+          <article class="card">
+            <span class="icon icon-catalog"
+              ><svg lucideLayoutDashboard [size]="20" aria-hidden="true"></svg
+            ></span>
+            <p class="card-label">Productos en catálogo</p>
+            <strong>{{ productos.data()?.total }}</strong>
+            <p class="card-caption">Productos registrados</p>
+          </article>
+        }
+      } @else {
+        <p class="notice">Catálogo no disponible por permisos.</p>
+      }
+    }
+  </section>
+</main>
