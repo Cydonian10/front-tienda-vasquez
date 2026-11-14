@@ -50,13 +50,12 @@ describe('Feature routes', () => {
     },
   );
 
-  it('preserves the home redirect and placeholder URLs', async () => {
+  it('redirects the home and removed placeholder URLs to the dashboard', async () => {
     auth.accessToken = 'token';
     const harness = await RouterTestingHarness.create('/');
     expect(TestBed.inject(Router).url).toBe('/admin');
     await harness.navigateByUrl('/admin/reportes');
-    expect(TestBed.inject(Router).url).toBe('/admin/reportes');
-    expect(harness.routeNativeElement?.textContent).toContain('Aquí irá reportes');
+    expect(TestBed.inject(Router).url).toBe('/admin');
   });
 
   it.each([
