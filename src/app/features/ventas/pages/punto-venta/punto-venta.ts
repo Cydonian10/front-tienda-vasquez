@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { LucideBox, LucideShoppingCart, LucidePlus, LucideTrash2 } from '@lucide/angular';
+import { LucideArrowRight, LucideBox, LucideShoppingCart, LucidePlus, LucideTrash2 } from '@lucide/angular';
 import { PerfilAccess } from '@/core/access-control/perfil-access';
 import { PERMISOS } from '@/core/access-control/permissions';
 import { TextField } from '@/shared/components/text-field/text-field';
@@ -24,9 +24,10 @@ import { SelectField } from '@/shared/components/select-field/select-field';
 import { Pagination } from '@/shared/components/pagination/pagination';
 import { VentasQueries } from '../../queries/ventas.queries';
 import { VentasMutations } from '../../queries/ventas.mutations';
-import { Medio, Persona, ProductoDetalle, VentaDatos } from '../../models/venta.model';
+import { Medio, Persona, ProductoDetalle, ProductoLista, VentaDatos } from '../../models/venta.model';
 interface Linea {
   producto: ProductoDetalle;
+  marca: string;
   unidadId: string;
   cantidad: string;
 }
@@ -38,6 +39,7 @@ interface Linea {
     TextField,
     SelectField,
     Pagination,
+    LucideArrowRight,
     LucideBox,
     LucideShoppingCart,
     LucidePlus,
@@ -130,7 +132,7 @@ export class PuntoVenta {
   protected imagenFallida(id: string) {
     this.imagenesFallidas.update((actual) => new Set([...actual, id]));
   }
-  protected async agregar(id: string) {
+  protected async agregar(producto: ProductoLista) {
     if (
       this.seleccionado() ||
       this.guardar.isPending() ||
@@ -138,6 +140,7 @@ export class PuntoVenta {
       this.unidades.isError()
     )
       return;
+    const { id, marca } = producto;
     const version = this.auth.sessionVersion;
     this.seleccionado.set(id);
     this.mensaje.set('');
@@ -151,7 +154,7 @@ export class PuntoVenta {
       }
       this.lineas.update((ls) => [
         ...ls,
-        { producto: p, unidadId: principal.unidadId, cantidad: '1' },
+        { producto: p, marca, unidadId: principal.unidadId, cantidad: '1' },
       ]);
     } catch {
       if (!this.destroyRef.destroyed && version === this.auth.sessionVersion)

@@ -106,6 +106,7 @@ describe('Punto de venta', () => {
       fixture.detectChanges();
       expect(fixture.nativeElement.textContent).toContain('Precio por presentación');
     });
+    expect(fixture.nativeElement.querySelector('aside article')?.textContent).toContain('Marca');
     expect(fixture.nativeElement.querySelector('[aria-label="Agregar Arroz"]')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('S/ 5.00');
     const unidad = fixture.nativeElement.querySelector('#unidad-0') as HTMLSelectElement;

@@ -98,7 +98,7 @@
             <button
               type="button"
               class="group overflow-hidden rounded-xl border border-base-content/10 bg-base-300 text-left transition hover:border-secondary/40 focus-visible:outline-2 focus-visible:outline-secondary disabled:opacity-50"
-              (click)="agregar(p.id)"
+              (click)="agregar(p)"
               [disabled]="
                 guardar.isPending() ||
                 !!seleccionado() ||
@@ -188,8 +188,13 @@
             @for (l of lineas(); track $index; let i = $index) {
               <article class="rounded-xl border border-base-content/10 bg-base-300/50 p-3">
                 <div class="flex items-start justify-between gap-2">
-                  <strong class="text-sm font-medium">{{ l.producto.nombre }}</strong
-                  ><button
+                  <div class="min-w-0">
+                    <strong class="text-sm font-medium">{{ l.producto.nombre }}</strong>
+                    @if (l.marca) {
+                      <span class="ml-2 text-xs text-base-content/60">{{ l.marca }}</span>
+                    }
+                  </div>
+                  <button
                     class="btn btn-ghost btn-xs text-error"
                     (click)="quitar(i)"
                     [attr.aria-label]="'Quitar ' + l.producto.nombre"
@@ -238,7 +243,7 @@
             [disabled]="!lineas().length || guardar.isPending() || !!seleccionado()"
             (click)="abrirCobro()"
           >
-            Continuar al cobro →
+            Continuar al cobro <svg lucideArrowRight [size]="16" aria-hidden="true"></svg>
           </button>
         </div>
       </fieldset>
