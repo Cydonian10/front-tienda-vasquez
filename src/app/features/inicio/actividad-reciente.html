@@ -1,0 +1,16 @@
+<div class="activity-grid">
+  <section class="panel" aria-labelledby="recientes-title">
+    <div class="heading"><div><h2 id="recientes-title">Ventas recientes</h2><p>Últimas ventas registradas.</p></div><a routerLink="/admin/ventas">Ver todas <span aria-hidden="true">→</span></a></div>
+    @if (ventas.isPending()) { <p class="state" role="status">Cargando ventas…</p> }
+    @else if (ventas.isError()) { <p class="state" role="alert">No se pudieron cargar las ventas. <button (click)="ventas.refetch()">Reintentar</button></p> }
+    @else if (!ventas.data()?.length) { <p class="state">Aún no hay ventas registradas.</p> }
+    @else { <ul>@for (venta of ventas.data(); track venta.id) { <li><span class="sale-icon"><svg lucideShoppingCart [size]="18" aria-hidden="true"></svg></span><div class="description"><strong>{{ venta.cliente || 'Consumidor final' }}</strong><span>{{ fecha(venta.fecha) }} · {{ venta.modalidad === 'fiado' ? 'Fiado' : (venta.medio || 'Contado') }}</span></div><strong class="amount">S/ {{ dinero(venta.total) }}</strong></li> }</ul> }
+  </section>
+  <section class="panel" aria-labelledby="vendidos-title">
+    <div class="heading"><div><h2 id="vendidos-title">Productos más vendidos</h2><p>Según cantidad en unidades principales, últimos 7 días.</p></div><span class="badge">7 días</span></div>
+    @if (productos.isPending()) { <p class="state" role="status">Cargando productos…</p> }
+    @else if (productos.isError()) { <p class="state" role="alert">No se pudieron cargar los productos. <button (click)="productos.refetch()">Reintentar</button></p> }
+    @else if (!productos.data()?.length) { <p class="state">No hay productos vendidos en este periodo.</p> }
+    @else { <ol>@for (producto of productos.data(); track producto.id; let i = $index) { <li><span class="rank">{{ (i + 1).toString().padStart(2, '0') }}</span><div class="description"><strong>{{ producto.nombre }}</strong></div><span class="units">{{ cantidad(producto.cantidad) }} {{ producto.unidad }}</span></li> }</ol> }
+  </section>
+</div>

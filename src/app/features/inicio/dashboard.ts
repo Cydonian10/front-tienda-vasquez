@@ -1,3 +1,4 @@
+import { ActividadReciente } from './actividad-reciente';
 import { VentasChart, VentaDia } from './ventas-chart';
 import { Component, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -20,6 +21,7 @@ import { environment } from '../../../environments/environment';
   imports: [
     RouterLink,
     VentasChart,
+    ActividadReciente,
     LucideBarChart3,
     LucideShoppingCart,
     LucideBox,
