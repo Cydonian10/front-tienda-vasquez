@@ -35,11 +35,12 @@ export class ProductoCreatePage implements OnDestroy {
   protected readonly opcionesUnidades = computed(() => [{ value: '', label: 'Selecciona una unidad' }, ...(this.unidades.data() ?? []).map(x => ({ value: x.id, label: x.nombre }))]);
   protected readonly guardar = injectMutation(() => this.mutations.crear());
   protected readonly error = signal('');
-  protected readonly modelo = signal({ nombre: '', marcaId: '', precio: null as number | null, stock: null as number | null, sku: '', codigoBarras: '', principal: '' });
+  protected readonly modelo = signal({ nombre: '', marcaId: '', precio: null as number | null, stock: null as number | null, stockMinimo: 0 as number | null, sku: '', codigoBarras: '', principal: '' });
   protected readonly formulario = form(this.modelo, path => {
     required(path.nombre, { message: 'Ingresa el nombre.' }); pattern(path.nombre, /\S/, { message: 'Ingresa un nombre válido.' }); maxLength(path.nombre, 150);
     required(path.marcaId, { message: 'Selecciona una marca.' }); required(path.principal, { message: 'Selecciona una unidad.' }); disabled(path.principal, () => !!this.id);
     required(path.precio, { message: 'Ingresa el precio.' }); min(path.precio, 0, { message: 'El precio no puede ser negativo.' }); required(path.stock, { message: 'Ingresa el stock.' }); min(path.stock, 0, { message: 'El stock no puede ser negativo.' });
+    required(path.stockMinimo, { message: 'Ingresa el stock mínimo.' }); min(path.stockMinimo, 0, { message: 'El stock mínimo no puede ser negativo.' });
     maxLength(path.sku, 100); maxLength(path.codigoBarras, 100);
   });
   protected categoriaIds: string[] = [];
@@ -50,7 +51,7 @@ export class ProductoCreatePage implements OnDestroy {
       const p = this.detalle.data();
       if (!p || this.inicializado || p.id !== this.id) return;
       this.inicializado = true;
-      this.formulario().reset({ nombre: p.nombre, marcaId: p.marcaId, precio: Number(p.precio), stock: Number(p.stock), sku: p.sku ?? '', codigoBarras: p.codigoBarras ?? '', principal: p.unidades.find(u => u.principal)?.unidadId ?? '' });
+      this.formulario().reset({ nombre: p.nombre, marcaId: p.marcaId, precio: Number(p.precio), stock: Number(p.stock), stockMinimo: Number(p.stockMinimo), sku: p.sku ?? '', codigoBarras: p.codigoBarras ?? '', principal: p.unidades.find(u => u.principal)?.unidadId ?? '' });
       this.categoriaIds = [...p.categoriaIds];
       this.secundarias = p.unidades
         .filter((u) => !u.principal)
@@ -93,7 +94,7 @@ export class ProductoCreatePage implements OnDestroy {
   }
   protected enviar() {
     this.formulario().markAsTouched();
-    const { nombre, marcaId, precio, stock, sku, codigoBarras, principal } = this.modelo();
+    const { nombre, marcaId, precio, stock, stockMinimo, sku, codigoBarras, principal } = this.modelo();
     const ids = [principal, ...this.secundarias.map((u) => u.unidadId)];
     if (
       this.formulario().invalid() ||
@@ -101,10 +102,13 @@ export class ProductoCreatePage implements OnDestroy {
       !marcaId ||
       precio === null ||
       stock === null ||
+      stockMinimo === null ||
       !Number.isFinite(precio) ||
       !Number.isFinite(stock) ||
+      !Number.isFinite(stockMinimo) ||
       precio < 0 ||
       stock < 0 ||
+      stockMinimo < 0 ||
       ids.some((id) => !id) ||
       new Set(ids).size !== ids.length ||
       this.secundarias.some((u) => u.factor === null || !Number.isFinite(u.factor) || u.factor <= 0)
@@ -124,6 +128,7 @@ export class ProductoCreatePage implements OnDestroy {
         marcaId: marcaId,
         precio: precio,
         stock: stock,
+        stockMinimo: stockMinimo,
         sku: sku.trim(),
         codigoBarras: codigoBarras.trim(),
         categoriaIds: this.categoriaIds,

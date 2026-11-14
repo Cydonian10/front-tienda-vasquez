@@ -3,6 +3,7 @@ export interface Producto {
   nombre: string;
   precio: string;
   stock: string;
+  stockMinimo: string;
   sku: string | null;
   codigoBarras: string | null;
   marca: string;
@@ -22,6 +23,7 @@ export interface ProductoDetalle {
   marcaId: string;
   precio: string;
   stock: string;
+  stockMinimo: string;
   sku: string | null;
   codigoBarras: string | null;
   categoriaIds: string[];

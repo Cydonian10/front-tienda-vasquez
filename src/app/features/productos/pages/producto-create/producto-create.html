@@ -81,7 +81,7 @@
       <section class="rounded-[18px] border border-base-content/10 bg-base-200 p-5 sm:p-8">
         <h2 class="text-lg font-medium">Precio, stock y unidades</h2>
         <p class="mt-1 text-sm text-base-content/60">
-          El precio y el stock corresponden a la unidad principal.
+          El precio, el stock y el stock mínimo corresponden a la unidad principal.
         </p>
         <div class="mt-6 grid gap-5 sm:grid-cols-3">
           <div>
@@ -107,6 +107,10 @@
             [label]="id ? 'Stock' : 'Stock inicial'"
             [formField]="formulario.stock"
           />
+          <div>
+            <app-number-field inputId="producto-stock-minimo" label="Stock mínimo" [formField]="formulario.stockMinimo" />
+            <p class="text-xs text-base-content/60">Se usará como referencia para futuras alertas de stock.</p>
+          </div>
         </div>
         <div class="mt-6 border-t border-base-content/10 pt-5">
           <h3 class="font-medium">
